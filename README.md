@@ -1,6 +1,13 @@
 oclif-hello-world
 =================
 
+# TODO:
+* Implement commands
+* Clean up generator boilerplate
+* Fix README
+* Fixup workflows
+
+
 oclif example Hello World CLI
 
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
