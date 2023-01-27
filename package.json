@@ -1,6 +1,6 @@
 {
   "name": "immich",
-  "version": "0.0.0",
+  "version": "0.30.0",
   "description": "Immich CLI Utilities",
   "author": "Alex Tran",
   "bin": {
@@ -17,24 +17,25 @@
     "/oclif.manifest.json"
   ],
   "dependencies": {
-    "@oclif/core": "^2",
-    "@oclif/plugin-help": "^5",
-    "@oclif/plugin-plugins": "^2.2.2"
+    "@oclif/core": "^2.0.7",
+    "@oclif/plugin-help": "^5.2.1",
+    "@oclif/plugin-plugins": "^2.2.4",
+    "immich-sdk": "^0.1.1"
   },
   "devDependencies": {
     "@oclif/test": "^2.3.3",
-    "@types/chai": "^4",
-    "@types/mocha": "^9.0.0",
+    "@types/chai": "^4.3.4",
+    "@types/mocha": "^9.1.1",
     "@types/node": "^16.18.11",
-    "chai": "^4",
+    "chai": "^4.3.7",
     "eslint": "^7.32.0",
-    "eslint-config-oclif": "^4",
+    "eslint-config-oclif": "^4.0.0",
     "eslint-config-oclif-typescript": "^1.0.3",
-    "mocha": "^9",
-    "oclif": "^3",
-    "shx": "^0.3.3",
+    "mocha": "^9.2.2",
+    "oclif": "^3.6.1",
+    "shx": "^0.3.4",
     "ts-node": "^10.9.1",
-    "tslib": "^2.4.1",
+    "tslib": "^2.5.0",
     "typescript": "^4.9.4"
   },
   "oclif": {
