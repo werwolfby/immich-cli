@@ -1,5 +1,5 @@
 import { Command, Flags } from '@oclif/core'
-import { BaseCommand } from '../cli/baseCommand'
+import { BaseCommand } from '../cli/base-command'
 
 export default class Upload extends BaseCommand<typeof Upload> {
   static description = "Upload images and videos in a directory to Immich's server"

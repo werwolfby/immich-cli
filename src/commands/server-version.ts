@@ -1,5 +1,5 @@
 import { ServerVersionReponseDto } from 'immich-sdk'
-import { BaseCommand } from '../cli/baseCommand'
+import { BaseCommand } from '../cli/base-command'
 
 export default class ServerVersion extends BaseCommand<typeof ServerVersion> {
   static description = "Get the server version"
