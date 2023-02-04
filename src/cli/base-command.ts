@@ -34,30 +34,23 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
   public async init(): Promise<void> {
     await super.init();
 
-    try {
-      const { args, flags } = await this.parse({
-        flags: this.ctor.flags,
-        baseFlags: (super.ctor as typeof BaseCommand).baseFlags,
-        args: this.ctor.args,
-        strict: this.ctor.strict,
-      });
+    const { args, flags } = await this.parse({
+      flags: this.ctor.flags,
+      baseFlags: (super.ctor as typeof BaseCommand).baseFlags,
+      args: this.ctor.args,
+      strict: this.ctor.strict,
+    });
 
-      this.flags = flags as Flags<T>;
-      this.args = args as Args<T>;
-      this.deviceId = (await si.uuid()).os || 'CLI';
-      this.immichApi = new ImmichApi(this.flags.server, this.flags.key);
+    this.flags = flags as Flags<T>;
+    this.args = args as Args<T>;
+    this.deviceId = (await si.uuid()).os || 'CLI';
+    this.immichApi = new ImmichApi(this.flags.server, this.flags.key);
 
-      // Check if server and api key are valid
-      const { data } = await this.immichApi.userApi.getMyUserInfo().catch((error) => {
-        this.error(`Failed to connect to the server: ${error.message}`);
-      });
+    // Check if server and api key are valid
+    const { data } = await this.immichApi.userApi.getMyUserInfo().catch((error) => {
+      this.error(`Failed to connect to the server: ${error.message}`);
+    });
 
-      this.log(`You are logged in as ${data.email}`);
-    } catch {
-      this.error('Error', {
-        exit: 1,
-        suggestions: ["Use --help to see the command's usage"],
-      });
-    }
+    this.log(`You are logged in as ${data.email}`);
   }
 }

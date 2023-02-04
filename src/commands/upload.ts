@@ -1,6 +1,6 @@
 import { Flags, ux } from '@oclif/core';
 import { BaseCommand } from '../cli/base-command';
-import { UploadDto } from '../cores';
+import { UploadOptions } from '../cores';
 import { DirectoryService, UploadService } from '../services';
 
 // ./bin/dev upload -k 7asgQAUoQ4y2R3uJXuVHBv3mqyuGF3NR7lRTACRtxNw -s http://10.1.15.216:2283/api
@@ -11,7 +11,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
 
   static flags = {
     directory: Flags.string({ char: 'd', required: true, description: 'Directory to upload from' }),
-    watch: Flags.boolean({ char: 'w', description: 'Watch and upload files in directory', default: false }),
+    watch: Flags.boolean({ char: 'w', description: 'Enable watch mode', default: false }),
   };
 
   private directoryService!: DirectoryService;
@@ -22,6 +22,13 @@ export default class Upload extends BaseCommand<typeof Upload> {
       this.error('Missing required flags', { exit: 1, suggestions: ["Use --help to see the command's usage"] });
     });
 
+    const options = new UploadOptions();
+    options.deviceId = this.deviceId;
+    options.directory = this.flags.directory;
+
+    this.directoryService = new DirectoryService();
+    this.uploadService = new UploadService(this.immichApi, options);
+
     await (flags.watch ? this.watch() : this.runOnce());
   }
 
@@ -31,13 +38,6 @@ export default class Upload extends BaseCommand<typeof Upload> {
 
   async runOnce(): Promise<void> {
     ux.action.start('Upload');
-
-    const uploadDto = new UploadDto();
-    uploadDto.deviceId = this.deviceId;
-    uploadDto.directory = this.flags.directory;
-
-    this.directoryService = new DirectoryService();
-    this.uploadService = new UploadService(this.immichApi, uploadDto);
 
     ux.action.start('Upload', 'Indexing files');
     const local = await this.directoryService.buildUploadTarget(this.flags.directory);

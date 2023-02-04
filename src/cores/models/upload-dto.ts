@@ -1,4 +1,4 @@
-export class UploadDto {
+export class UploadOptions {
   directory!: string;
   deviceId!: string;
 }

@@ -1,4 +1,4 @@
-import { UploadDto } from '../cores/models/upload-dto';
+import { UploadOptions } from '../cores/models/upload-dto';
 import { ImmichApi } from '../api/client';
 import { UploadTarget } from '../cores';
 import { stat } from 'node:fs/promises';
@@ -10,15 +10,15 @@ import axios, { AxiosRequestConfig } from 'axios';
 
 export class UploadService {
   private readonly immichApi: ImmichApi;
-  private readonly dto: UploadDto;
+  private readonly options: UploadOptions;
 
-  constructor(immichApi: ImmichApi, dto: UploadDto) {
+  constructor(immichApi: ImmichApi, options: UploadOptions) {
     this.immichApi = immichApi;
-    this.dto = dto;
+    this.options = options;
   }
 
   public async getUploadedAssetIds(): Promise<string[]> {
-    const { data } = await this.immichApi.assetApi.getUserAssetsByDeviceId(this.dto.deviceId);
+    const { data } = await this.immichApi.assetApi.getUserAssetsByDeviceId(this.options.deviceId);
     return data;
   }
 
@@ -28,7 +28,7 @@ export class UploadService {
 
       const data = new FormData();
       data.append('deviceAssetId', target.id);
-      data.append('deviceId', this.dto.deviceId);
+      data.append('deviceId', this.options.deviceId);
       data.append('assetType', this.getFileType(target.path));
       data.append('createdAt', fileStat.mtime.toISOString());
       data.append('modifiedAt', fileStat.mtime.toISOString());
