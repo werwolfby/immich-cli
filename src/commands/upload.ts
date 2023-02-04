@@ -1,6 +1,8 @@
-import { Command, Flags } from '@oclif/core';
+import { Flags } from '@oclif/core';
 import { BaseCommand } from '../cli/base-command';
 
+// 7asgQAUoQ4y2R3uJXuVHBv3mqyuGF3NR7lRTACRtxNw
+// http://10.1.15.216:2283/api
 export default class Upload extends BaseCommand<typeof Upload> {
   static description = "Upload images and videos in a directory to Immich's server";
 
@@ -12,6 +14,8 @@ export default class Upload extends BaseCommand<typeof Upload> {
   };
 
   public async run(): Promise<void> {
+    const { flags } = await this.parse(Upload);
+    console.log(flags);
     this.log(this.flags.name);
 
     this.log('Not implemented yet :)');
