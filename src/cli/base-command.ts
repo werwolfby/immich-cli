@@ -1,5 +1,6 @@
 import { Command, Flags, Interfaces } from '@oclif/core';
 import { ImmichApi } from '../api/client';
+import * as si from 'systeminformation';
 
 export type Flags<T extends typeof Command> = Interfaces.InferredFlags<typeof BaseCommand['baseFlags'] & T['flags']>;
 export type Args<T extends typeof Command> = Interfaces.InferredArgs<T['args']>;
@@ -25,7 +26,8 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
   protected flags!: Flags<T>;
   protected args!: Args<T>;
 
-  protected client!: ImmichApi;
+  protected immichApi!: ImmichApi;
+  protected deviceId!: string;
 
   public async init(): Promise<void> {
     await super.init();
@@ -40,15 +42,15 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
 
       this.flags = flags as Flags<T>;
       this.args = args as Args<T>;
-
-      this.client = new ImmichApi(this.flags.server, this.flags.key);
+      this.deviceId = (await si.uuid()).os || 'CLI';
+      this.immichApi = new ImmichApi(this.flags.server, this.flags.key);
 
       // Check if server and api key are valid
-      this.client.userApi.getMyUserInfo().catch((error) => {
+      this.immichApi.userApi.getMyUserInfo().catch((error) => {
         this.error(`Failed to connect to the server: ${error.message}`);
       });
     } catch {
-      this.error("Failed to parse command's arguments and flags", {
+      this.error('Error', {
         exit: 1,
         suggestions: ["Use --help to see the command's usage"],
       });
