@@ -11,27 +11,36 @@ export default class Upload extends BaseCommand<typeof Upload> {
 
   static flags = {
     directory: Flags.string({ char: 'd', required: true, description: 'Directory to upload from' }),
+    watch: Flags.boolean({ char: 'w', description: 'Watch and upload files in directory', default: false }),
   };
 
   private directoryService!: DirectoryService;
   private uploadService!: UploadService;
 
   public async run(): Promise<void> {
-    ux.action.start('Upload');
-
     const { flags } = await this.parse(Upload).catch(() => {
       this.error('Missing required flags', { exit: 1, suggestions: ["Use --help to see the command's usage"] });
     });
 
+    await (flags.watch ? this.watch() : this.runOnce());
+  }
+
+  async watch(): Promise<void> {
+    console.log('watch dir');
+  }
+
+  async runOnce(): Promise<void> {
+    ux.action.start('Upload');
+
     const uploadDto = new UploadDto();
     uploadDto.deviceId = this.deviceId;
-    uploadDto.directory = flags.directory;
+    uploadDto.directory = this.flags.directory;
 
     this.directoryService = new DirectoryService();
     this.uploadService = new UploadService(this.immichApi, uploadDto);
 
     ux.action.start('Upload', 'Indexing files');
-    const local = await this.directoryService.buildUploadTarget(flags.directory);
+    const local = await this.directoryService.buildUploadTarget(this.flags.directory);
     const remote = await this.uploadService.getUploadedAssetIds();
     const toUpload = local.filter((x) => !remote.includes(x.id));
 
@@ -39,15 +48,13 @@ export default class Upload extends BaseCommand<typeof Upload> {
       ux.action.stop(`Found ${local.length} files at target directory, all have been uploaded!`);
       this.exit(0);
     } else {
-      ux.action.stop(
-        `Found ${local.length} files at target directory, including ${toUpload.length} new files will be uploaded`,
-      );
+      ux.action.stop(`Found ${local.length} files at target directory, ${toUpload.length} new files will be uploaded`);
     }
 
-    let confirm = await ux.prompt(`Found ${toUpload.length} files to upload. Proceed? (yes/no)`, { type: 'normal' });
+    let confirm = await ux.prompt('Proceed?(yes/no)', { type: 'normal' });
     while (confirm !== 'yes' && confirm !== 'no') {
       this.log('Please enter yes or no');
-      confirm = await ux.prompt(`Found ${toUpload.length} files to upload. Proceed? (yes/no)`, { type: 'normal' });
+      confirm = await ux.prompt('Proceed?(yes/no)', { type: 'normal' });
     }
 
     if (confirm === 'yes') {

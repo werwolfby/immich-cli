@@ -17,25 +17,6 @@ export class UploadService {
     this.dto = dto;
   }
 
-  // public async execute(): Promise<void> {
-  //   await this.directoryService.check(this.dto.directory);
-
-  //   const local = await this.directoryService.buildUploadTarget(this.dto.directory);
-  //   const remote = await this.getUploadedAssetIds();
-
-  //   const toUpload = local.filter((x) => !remote.includes(x.id));
-
-  //   let confirm = await ux.prompt(`Found ${toUpload.length} files to upload. Proceed? (yes/no)`, { type: 'normal' });
-  //   while (confirm !== 'yes' && confirm !== 'no') {
-  //     this.command.log('Please enter yes or no');
-  //     confirm = await ux.prompt(`Found ${toUpload.length} files to upload. Proceed? (yes/no)`, { type: 'normal' });
-  //   }
-
-  //   if (confirm === 'yes') {
-  //     await this.uploadFiles(toUpload);
-  //   }
-  // }
-
   public async getUploadedAssetIds(): Promise<string[]> {
     const { data } = await this.immichApi.assetApi.getUserAssetsByDeviceId(this.dto.deviceId);
     return data;
