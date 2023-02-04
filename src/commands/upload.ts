@@ -18,10 +18,6 @@ export default class Upload extends BaseCommand<typeof Upload> {
   private uploadService!: UploadService;
 
   public async run(): Promise<void> {
-    const { flags } = await this.parse(Upload).catch(() => {
-      this.error('Missing required flags', { exit: 1, suggestions: ["Use --help to see the command's usage"] });
-    });
-
     const options = new UploadOptions();
     options.deviceId = this.deviceId;
     options.directory = this.flags.directory;
@@ -29,7 +25,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
     this.directoryService = new DirectoryService();
     this.uploadService = new UploadService(this.immichApi, options);
 
-    await (flags.watch ? this.watch() : this.runOnce());
+    await (this.flags.watch ? this.watch() : this.runOnce());
   }
 
   async watch(): Promise<void> {
