@@ -33,15 +33,25 @@ export default class Upload extends BaseCommand<typeof Upload> {
     ux.action.start('Upload', 'Indexing files');
     const local = await this.directoryService.buildUploadTarget(flags.directory);
     const remote = await this.uploadService.getUploadedAssetIds();
-    const uploadTargets = local.filter((x) => !remote.includes(x.id));
+    const toUpload = local.filter((x) => !remote.includes(x.id));
 
-    if (uploadTargets.length === 0) {
+    if (toUpload.length === 0) {
       ux.action.stop(`Found ${local.length} files at target directory, all have been uploaded!`);
       this.exit(0);
     } else {
       ux.action.stop(
-        `Found ${local.length} files at target directory, including ${uploadTargets.length} new files will be uploaded`,
+        `Found ${local.length} files at target directory, including ${toUpload.length} new files will be uploaded`,
       );
+    }
+
+    let confirm = await ux.prompt(`Found ${toUpload.length} files to upload. Proceed? (yes/no)`, { type: 'normal' });
+    while (confirm !== 'yes' && confirm !== 'no') {
+      this.log('Please enter yes or no');
+      confirm = await ux.prompt(`Found ${toUpload.length} files to upload. Proceed? (yes/no)`, { type: 'normal' });
+    }
+
+    if (confirm === 'yes') {
+      await this.uploadService.uploadFiles(toUpload);
     }
 
     this.exit(0);
