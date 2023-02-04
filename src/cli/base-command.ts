@@ -1,3 +1,4 @@
+import { UserResponseDto } from './../../node_modules/immich-sdk/dist/api.d';
 import { Command, Flags, Interfaces } from '@oclif/core';
 import { ImmichApi } from '../api/client';
 import * as si from 'systeminformation';
@@ -28,6 +29,7 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
 
   protected immichApi!: ImmichApi;
   protected deviceId!: string;
+  protected user!: UserResponseDto;
 
   public async init(): Promise<void> {
     await super.init();
@@ -46,9 +48,11 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
       this.immichApi = new ImmichApi(this.flags.server, this.flags.key);
 
       // Check if server and api key are valid
-      this.immichApi.userApi.getMyUserInfo().catch((error) => {
+      const { data } = await this.immichApi.userApi.getMyUserInfo().catch((error) => {
         this.error(`Failed to connect to the server: ${error.message}`);
       });
+
+      this.log(`You are logged in as ${data.email}`);
     } catch {
       this.error('Error', {
         exit: 1,

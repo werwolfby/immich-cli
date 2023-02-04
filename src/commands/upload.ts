@@ -1,7 +1,7 @@
-import { Flags } from '@oclif/core';
+import { Flags, ux } from '@oclif/core';
 import { BaseCommand } from '../cli/base-command';
 import { UploadDto } from '../cores';
-import { UploadService } from '../services';
+import { DirectoryService, UploadService } from '../services';
 
 // ./bin/dev upload -k 7asgQAUoQ4y2R3uJXuVHBv3mqyuGF3NR7lRTACRtxNw -s http://10.1.15.216:2283/api
 // ./bin/run upload -k 7asgQAUoQ4y2R3uJXuVHBv3mqyuGF3NR7lRTACRtxNw -s http://10.1.15.216:2283/api
@@ -13,7 +13,12 @@ export default class Upload extends BaseCommand<typeof Upload> {
     directory: Flags.string({ char: 'd', required: true, description: 'Directory to upload from' }),
   };
 
+  private directoryService!: DirectoryService;
+  private uploadService!: UploadService;
+
   public async run(): Promise<void> {
+    ux.action.start('Upload');
+
     const { flags } = await this.parse(Upload).catch(() => {
       this.error('Missing required flags', { exit: 1, suggestions: ["Use --help to see the command's usage"] });
     });
@@ -22,8 +27,22 @@ export default class Upload extends BaseCommand<typeof Upload> {
     uploadDto.deviceId = this.deviceId;
     uploadDto.directory = flags.directory;
 
-    const uploadService = new UploadService(this, this.immichApi, uploadDto);
-    uploadService.execute();
+    this.directoryService = new DirectoryService();
+    this.uploadService = new UploadService(this.immichApi, uploadDto);
+
+    ux.action.start('Upload', 'Indexing files');
+    const local = await this.directoryService.buildUploadTarget(flags.directory);
+    const remote = await this.uploadService.getUploadedAssetIds();
+    const uploadTargets = local.filter((x) => !remote.includes(x.id));
+
+    if (uploadTargets.length === 0) {
+      ux.action.stop(`Found ${local.length} files at target directory, all have been uploaded!`);
+      this.exit(0);
+    } else {
+      ux.action.stop(
+        `Found ${local.length} files at target directory, including ${uploadTargets.length} new files will be uploaded`,
+      );
+    }
 
     this.exit(0);
   }
