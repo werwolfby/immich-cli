@@ -7,7 +7,7 @@ export default class ServerVersion extends BaseCommand<typeof ServerVersion> {
 
   public async run(): Promise<ServerVersionReponseDto> {
     this.debug('Getting server version');
-    const { data: versionInfo } = await this.client.serverInfoApi.getServerVersion();
+    const { data: versionInfo } = await this.immichApi.serverInfoApi.getServerVersion();
 
     const version = `v${versionInfo.major}.${versionInfo.minor}.${versionInfo.patch}`;
     this.log(`Connected to Immich ${version} at ${this.flags.server}`);
