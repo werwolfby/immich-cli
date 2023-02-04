@@ -42,6 +42,11 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
       this.args = args as Args<T>;
 
       this.client = new ImmichApi(this.flags.server, this.flags.key);
+
+      // Check if server and api key are valid
+      this.client.userApi.getMyUserInfo().catch((error) => {
+        this.error(`Failed to connect to the server: ${error.message}`);
+      });
     } catch {
       this.error("Failed to parse command's arguments and flags", {
         exit: 1,

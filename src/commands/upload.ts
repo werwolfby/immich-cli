@@ -1,6 +1,6 @@
 import { Flags, ux } from '@oclif/core';
 import { BaseCommand } from '../cli/base-command';
-import { checkDirectory, authenticateUser, indexDirectory, uploadFiles, getUploadedAssetIds } from '../cores';
+import { checkDirectory, indexDirectory, uploadFiles, getUploadedAssetIds } from '../cores';
 import { ImmichApi } from '../api/client';
 import * as si from 'systeminformation';
 
@@ -25,7 +25,6 @@ export default class Upload extends BaseCommand<typeof Upload> {
 
     const apiClient = new ImmichApi(this.flags.server, this.flags.key);
 
-    await authenticateUser(this, apiClient, flags.key, flags.server);
     await checkDirectory(this, flags.directory);
 
     const local = await indexDirectory(this, flags.directory);
