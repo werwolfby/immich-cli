@@ -26,9 +26,15 @@ export class ImmichApi {
   public systemConfigApi: SystemConfigApi;
   public shareApi: ShareApi;
 
+  public serverUrl: string;
+  public key: string;
+
   private config;
 
   constructor(address: URL, apiKey: string) {
+    this.serverUrl = address.toString();
+    this.key = apiKey;
+
     this.config = new Configuration({
       basePath: address.toString(),
       baseOptions: {

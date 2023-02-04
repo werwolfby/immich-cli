@@ -8,5 +8,6 @@
     "object-curly-spacing": "off",
     "arrow-parens": "off",
     "new-cap": "off",
+    "no-await-in-loop": "off",
   }
 }
