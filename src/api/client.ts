@@ -31,7 +31,11 @@ export class ImmichApi {
   constructor(address: URL, apiKey: string) {
     this.config = new Configuration({
       basePath: address.toString(),
-      apiKey,
+      baseOptions: {
+        headers: {
+          'x-api-key': apiKey,
+        },
+      },
     });
 
     this.userApi = new UserApi(this.config);
