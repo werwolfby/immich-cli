@@ -1,7 +1,7 @@
 import { UploadTarget } from '../cores';
 import path from 'node:path';
 export class AlbumService {
-  createAlbumStructureFromPath(targets: UploadTarget[]) {
+  createAlbumCollection(targets: UploadTarget[]) {
     const albums = new Map<string, UploadTarget[]>();
     for (const target of targets) {
       const albumName = target.path.split(path.sep).slice(-2)[0];

@@ -63,9 +63,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
   async uploadAsAlbum(targets: UploadTarget[], albumName?: string): Promise<void> {
     const albumService = new AlbumService();
 
-    const toUpload = albumService.createAlbumStructureFromPath(targets);
-
-    console.log(toUpload);
+    const albumCollection = albumService.createAlbumCollection(targets);
   }
 
   async uploadOnce(toUpload: UploadTarget[], local: UploadTarget[]): Promise<void> {
