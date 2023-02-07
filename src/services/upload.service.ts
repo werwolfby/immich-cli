@@ -1,4 +1,4 @@
-import { UploadOptions } from '../cores/models/upload-dto';
+import { UploadOptions } from '../cores/models/upload-options';
 import { ImmichApi } from '../api/client';
 import { UploadTarget } from '../cores';
 import { stat } from 'node:fs/promises';
