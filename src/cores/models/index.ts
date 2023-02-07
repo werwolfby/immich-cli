@@ -1,2 +1,2 @@
-export * from './upload-dto';
+export * from './upload-options';
 export * from './upload-target';
