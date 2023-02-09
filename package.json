@@ -25,6 +25,7 @@
     "form-data": "^4.0.0",
     "immich-sdk": "^0.1.1",
     "mime-types": "^2.1.35",
+    "rxjs": "^7.8.0",
     "systeminformation": "^5.17.8"
   },
   "devDependencies": {

@@ -7,6 +7,8 @@ import fs from 'node:fs';
 import mime from 'mime-types';
 import FormData from 'form-data';
 import axios, { AxiosRequestConfig } from 'axios';
+import { Subject } from 'rxjs';
+import { UploadEvent } from '../cores/models/upload-event';
 
 export class UploadService {
   private readonly immichApi: ImmichApi;
@@ -22,7 +24,8 @@ export class UploadService {
     return data;
   }
 
-  public async uploadFiles(targets: UploadTarget[]): Promise<void> {
+  public async uploadFiles(targets: UploadTarget[], uploadEvent$: Subject<UploadEvent>): Promise<void> {
+    let uploadLength = targets.length;
     for (const target of targets) {
       const fileStat = await stat(target.path);
 
@@ -51,7 +54,15 @@ export class UploadService {
       };
 
       try {
+        const uploadEvent = new UploadEvent();
+        uploadEvent.fileName = target.path;
+        uploadEvent.remainder = uploadLength;
+        uploadEvent$.next(uploadEvent);
+
         await axios(config);
+
+        uploadEvent.remainder = uploadLength--;
+        uploadEvent$.next(uploadEvent);
       } catch {
         console.log('error');
       }

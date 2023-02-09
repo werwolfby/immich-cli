@@ -1,6 +1,8 @@
 import { Flags, ux } from '@oclif/core';
+import { Subject } from 'rxjs';
 import { BaseCommand } from '../cli/base-command';
 import { UploadOptions, UploadTarget } from '../cores';
+import { UploadEvent } from '../cores/models/upload-event';
 import { AlbumService, DirectoryService, UploadService } from '../services';
 
 // ./bin/dev upload --help
@@ -22,6 +24,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
 
   private directoryService!: DirectoryService;
   private uploadService!: UploadService;
+  private uploadEvent$ = new Subject<UploadEvent>();
 
   public async run(): Promise<void> {
     const options = new UploadOptions();
@@ -64,9 +67,36 @@ export default class Upload extends BaseCommand<typeof Upload> {
     const albumService = new AlbumService();
 
     const albumCollection = albumService.createAlbumCollection(targets);
+
+    /**
+     * Scenario 1.
+     * If an album hasn't been created, it will be created first before adding the files to the albums
+     * - If the file has been uploaded (check by id), it will be added to the album
+     * - If the file hasn't been uploaded, it will be uploaded and then added to the album
+     *
+     * Scenario 2.
+     * If an album has been created, it will be used to add the files to the album
+     * - If the file has been uploaded (check by id), it will be added to the album
+     * - If the file hasn't been uploaded, it will be uploaded and then added to the album
+     *
+     * Scenario 3.
+     * If album name is provided, it will used to create an album and all the files will be added to the album
+     * - If the file has been uploaded (check by id), it will be added to the album
+     * - If the file hasn't been uploaded, it will be uploaded and then added to the album
+     *
+     */
+
+    if (albumCollection.size === 0) {
+      ux.action.stop('No album to upload');
+      return;
+    }
   }
 
   async uploadOnce(toUpload: UploadTarget[], local: UploadTarget[]): Promise<void> {
+    this.uploadEvent$.subscribe((e) => {
+      ux.action.start('Upload', `\t [${e.remainder}/${toUpload.length}] \t ${e.fileName}`);
+    });
+
     if (toUpload.length === 0) {
       ux.action.stop(`Found ${local.length} files at target directory, all have been uploaded!`);
       this.exit(0);
@@ -82,7 +112,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
     }
 
     if (confirm === 'yes') {
-      await this.uploadService.uploadFiles(toUpload);
+      await this.uploadService.uploadFiles(toUpload, this.uploadEvent$);
     }
   }
 }
