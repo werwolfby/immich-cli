@@ -46,6 +46,7 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     this.deviceId = (await si.uuid()).os || 'CLI';
     this.immichApi = new ImmichApi(this.flags.server, this.flags.key);
 
+    this.log('Device ID: ', this.deviceId);
     // Check if server and api key are valid
     const { data } = await this.immichApi.userApi.getMyUserInfo().catch((error) => {
       this.error(`Failed to connect to the server: ${error.message}`);
