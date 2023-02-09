@@ -1,6 +1,14 @@
 import { UploadTarget } from '../cores';
 import path from 'node:path';
+import { AlbumResponseDto } from 'immich-sdk';
+import { ImmichApi } from '../api/client';
+
 export class AlbumService {
+  private readonly immichApi: ImmichApi;
+  constructor(immichApi: ImmichApi) {
+    this.immichApi = immichApi;
+  }
+
   createAlbumCollection(targets: UploadTarget[]) {
     const albums = new Map<string, UploadTarget[]>();
     for (const target of targets) {
@@ -13,5 +21,10 @@ export class AlbumService {
     }
 
     return albums;
+  }
+
+  async getAllAlbums(): Promise<AlbumResponseDto[]> {
+    const { data } = await this.immichApi.albumApi.getAllAlbums(false);
+    return data;
   }
 }
