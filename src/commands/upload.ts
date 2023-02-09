@@ -1,10 +1,10 @@
 import { Flags } from '@oclif/core';
-import { Subject } from 'rxjs';
+import chokidar from 'chokidar';
+import { Subject, mergeMap } from 'rxjs';
 import { BaseCommand } from '../cli/base-command';
 import { UploadOptions } from '../cores';
-import { UploadEvent } from '../cores/models/upload-event';
 import { AlbumService, DirectoryService, UploadService } from '../services';
-import chokidar from 'chokidar';
+
 // ./bin/dev upload --help
 // ./bin/dev upload -k ol7fY271I58KF2ZdcwqG31GRhFFqhzTR3X9ZRRWBI -s http://10.1.15.216:2283/api -d ./test-assets
 // ./bin/run upload -k ol7fY271I58KF2ZdcwqG31GRhFFqhzTR3X9ZRRWBI -s http://10.1.15.216:2283/api -d ./test-assets
@@ -25,7 +25,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
   private directoryService!: DirectoryService;
   private uploadService!: UploadService;
   private albumService!: AlbumService;
-  private uploadEvent$ = new Subject<UploadEvent>();
+  private files$ = new Subject();
 
   public async run(): Promise<void> {
     const options = new UploadOptions();
@@ -48,11 +48,25 @@ export default class Upload extends BaseCommand<typeof Upload> {
     console.log('remoteAlbums', remoteAlbums)
     // await (this.flags.watch ? this.watch() : this.runOnce());
 
+    this.files$.pipe(
+      mergeMap(
+        (
+          async (file: any) => {
+            console.log('file', file.path);
+            return file;
+          }
+        ),
+      ),
+    ).subscribe(() => console.log('ok'));
+
     chokidar.watch(this.flags.directory, {
       ignored: /(^|[/\\])\../,
       persistent: this.flags.watch,
-    }).on('add', path => {
-      console.log('file:', path);
+      awaitWriteFinish: true,
+    }).on('add', (path, stat) => {
+      if (this.directoryService.filterAcceptedFileType(path)) {
+        this.files$.next({ path, stat });
+      }
     })
   }
 

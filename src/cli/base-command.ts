@@ -1,7 +1,8 @@
-import { UserResponseDto } from './../../node_modules/immich-sdk/dist/api.d';
 import { Command, Flags, Interfaces } from '@oclif/core';
-import { ImmichApi } from '../api/client';
+import { ServerVersionReponseDto, UserResponseDto } from 'immich-sdk/dist/api';
 import * as si from 'systeminformation';
+import { ImmichApi } from '../api/client';
+import { buildTableInfo } from '../cores';
 
 export type Flags<T extends typeof Command> = Interfaces.InferredFlags<typeof BaseCommand['baseFlags'] & T['flags']>;
 export type Args<T extends typeof Command> = Interfaces.InferredArgs<T['args']>;
@@ -30,6 +31,7 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
   protected immichApi!: ImmichApi;
   protected deviceId!: string;
   protected user!: UserResponseDto;
+  protected serverVersion!: ServerVersionReponseDto;
 
   public async init(): Promise<void> {
     await super.init();
@@ -46,12 +48,16 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     this.deviceId = (await si.uuid()).os || 'CLI';
     this.immichApi = new ImmichApi(this.flags.server, this.flags.key);
 
-    this.log('Device ID: ', this.deviceId);
     // Check if server and api key are valid
-    const { data } = await this.immichApi.userApi.getMyUserInfo().catch((error) => {
+    const { data: userInfo } = await this.immichApi.userApi.getMyUserInfo().catch((error) => {
       this.error(`Failed to connect to the server: ${error.message}`);
     });
 
-    this.log(`You are logged in as ${data.email}`);
+    const { data: versionInfo } = await this.immichApi.serverInfoApi.getServerVersion();
+
+    this.user = userInfo;
+    this.serverVersion = versionInfo;
+
+    buildTableInfo(this.flags.server.href, this.user.email, this.serverVersion);
   }
 }
