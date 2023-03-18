@@ -517,7 +517,7 @@ async function getAssetInfoFromServer(
     });
     return res.data;
   } catch (e) {
-    log(chalk.red("Error getting device's uploaded assets"));
+    log(chalk.red("Error getting device's uploaded assets"), e);
     process.exit(1);
   }
 }
@@ -530,7 +530,7 @@ async function pingServer(endpoint: string) {
     }
   } catch (e) {
     log(
-      chalk.red("Error connecting to server - check server address and port")
+      chalk.red("Error connecting to server - check server address and port"), e
     );
     process.exit(1);
   }
@@ -547,7 +547,7 @@ async function validateConnection(endpoint: string, key: string) {
       return res.data;
     }
   } catch (e) {
-    log(chalk.red("Error logging in - check api key"));
+    log(chalk.red("Error logging in - check api key"), e);
     process.exit(1);
   }
 }
