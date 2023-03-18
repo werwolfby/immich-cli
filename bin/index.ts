@@ -530,7 +530,7 @@ async function pingServer(endpoint: string) {
     }
   } catch (e) {
     log(
-      chalk.red("Error connecting to server - check server address and port"), e
+      chalk.red("Error connecting to server - check server address and port"), e.message
     );
     process.exit(1);
   }
@@ -547,7 +547,7 @@ async function validateConnection(endpoint: string, key: string) {
       return res.data;
     }
   } catch (e) {
-    log(chalk.red("Error logging in - check api key"), e);
+    log(chalk.red("Error logging in - check api key"), e.message);
     process.exit(1);
   }
 }
