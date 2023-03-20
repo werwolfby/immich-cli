@@ -226,6 +226,20 @@ async function upload(
 
   log(`Indexing complete, found ${localAssets.length} local assets`);
 
+  var test = localAssets.map(async (asset) => {
+    const assetHash: Promise<string> = new Promise((resolve, reject) => {
+      const crypto = require("crypto");
+      const hash = crypto.createHash("sha1");
+      const stream = fs.createReadStream(asset.filePath);
+      stream.on("error", (err) => reject(err));
+      stream.on("data", (data) => hash.update(data));
+      stream.on("end", () => resolve(hash.digest("hex")));
+    });
+    log(new CheckAssetExistenceDto(asset.filePath, await assetHash));
+    return new CheckAssetExistenceDto(asset.filePath, await assetHash);
+  });
+  log(await Promise.all(test));
+
   log("Comparing local assets with those on the Immich instance...");
 
   const backupAsset = await getAssetInfoFromServer(endpoint, key, deviceId);
