@@ -14,6 +14,7 @@ import * as mime from "mime-types";
 import chalk from "chalk";
 import pjson from "../package.json";
 import pLimit from "p-limit";
+import { CheckAssetExistenceDto } from "./check-asset-existence.dto";
 
 const log = console.log;
 const rl = readline.createInterface({
@@ -515,6 +516,24 @@ async function getAssetInfoFromServer(
     const res = await axios.get(`${endpoint}/asset/${deviceId}`, {
       headers: { "x-api-key": key },
     });
+    return res.data;
+  } catch (e) {
+    log(chalk.red("Error getting device's uploaded assets"), e);
+    process.exit(1);
+  }
+}
+
+async function checkIfAssetsExistOnServer(
+  endpoint: string,
+  key: string,
+  checkAssetExistenceDto: CheckAssetExistenceDto[]
+) {
+  const data = JSON.stringify(checkAssetExistenceDto);
+  try {
+    const res = await axios.post(`${endpoint}/asset/exist`, data, {
+      headers: { "x-api-key": key ,'Content-Type': 'application/json'},
+    },
+    );
     return res.data;
   } catch (e) {
     log(chalk.red("Error getting device's uploaded assets"), e);
