@@ -9,12 +9,13 @@ import * as path from "path";
 import FormData from "form-data";
 import * as cliProgress from "cli-progress";
 import { stat } from "fs/promises";
+import { createHash } from "crypto";
+
 // GLOBAL
 import * as mime from "mime-types";
 import chalk from "chalk";
 import pjson from "../package.json";
 import pLimit from "p-limit";
-import { CheckAssetExistenceDto } from "./check-asset-existence.dto";
 
 const log = console.log;
 const rl = readline.createInterface({
@@ -23,7 +24,7 @@ const rl = readline.createInterface({
 });
 let errorAssets: any[] = [];
 
-const SUPPORTED_MIME = [
+const SUPPORTED_MIME_TYPES = [
   // IMAGES
   "image/heif",
   "image/heic",
@@ -160,8 +161,6 @@ async function upload(
 ) {
   const endpoint = server;
   const deviceId = deviceUuid || (await si.uuid()).os || "CLI";
-  const osInfo = (await si.osInfo()).distro;
-  const localAssets: any[] = [];
 
   // Ping server
   log("Checking connectivity with Immich instance...");
@@ -206,52 +205,93 @@ async function upload(
     }
   }
 
-  // Ensure that list of files only has unique entries
-  const uniqueFiles = new Set(files);
+  // Ensure that list of paths only has unique entries
+  const uniquePaths = new Set(files);
 
-  for (const filePath of uniqueFiles) {
-    const mimeType = mime.lookup(filePath) as string;
-    if (SUPPORTED_MIME.includes(mimeType)) {
-      const fileStat = fs.statSync(filePath);
-      localAssets.push({
-        id: `${path.basename(filePath)}-${fileStat.size}`.replace(/\s+/g, ""),
-        filePath,
-      });
-    }
-  }
-  if (localAssets.length == 0) {
+  if (uniquePaths.size == 0) {
     log("No local assets found, exiting");
     process.exit(0);
   }
 
-  log(`Indexing complete, found ${localAssets.length} local assets`);
+  log(`Indexing complete, found ${uniquePaths.size} local assets`);
 
-  var test = localAssets.map(async (asset) => {
-    const assetHash: Promise<string> = new Promise((resolve, reject) => {
-      const crypto = require("crypto");
+  const localAssets: any[] = [];
+  const assetsToCheck: CheckAssetExistenceDto[] = [];
+
+  log("Hashing local assets...");
+
+  let hashCounter = 0;
+
+  const crypto = require("crypto");
+
+  const sha1 = (filePath: string) =>
+    new Promise<string>((resolve, reject) => {
       const hash = crypto.createHash("sha1");
-      const stream = fs.createReadStream(asset.filePath);
-      stream.on("error", (err) => reject(err));
-      stream.on("data", (data) => hash.update(data));
-      stream.on("end", () => resolve(hash.digest("hex")));
+      const rs = fs.createReadStream(filePath);
+      rs.on("error", reject);
+      rs.on("data", (chunk) => hash.update(chunk));
+      rs.on("end", () => resolve(hash.digest("hex")));
     });
-    log(new CheckAssetExistenceDto(asset.filePath, await assetHash));
-    return new CheckAssetExistenceDto(asset.filePath, await assetHash);
+
+  for (const assetPath of uniquePaths) {
+    hashCounter++;
+    if (hashCounter % 100 == 0) {
+      log(hashCounter);
+    }
+    const mimeType = mime.lookup(assetPath) as string;
+    if (SUPPORTED_MIME_TYPES.includes(mimeType)) {
+      const checksum: string = await sha1(assetPath);
+      localAssets.push({
+        id: `${path.basename(assetPath)}-${checksum}`.replace(/\s+/g, ""),
+        path: assetPath,
+        checksum: checksum,
+      });
+      assetsToCheck.push({
+        id: assetPath,
+        checksum: checksum,
+      });
+    }
+  }
+
+  if (localAssets.length == 0) {
+    log("No supported assets found, exiting");
+    process.exit(0);
+  }
+
+  log(`Found ${localAssets.length} supported files, comparing hashes...`);
+
+  const checkedAssets: CheckedAssetDto[] = await checkAssetExistenceOnServer(
+    endpoint,
+    key,
+    assetsToCheck
+  );
+
+  const allAssets: any[] = checkedAssets.map((checkedAsset) => {
+    const localAsset = localAssets.find(
+      (asset) => asset.path === checkedAsset.id
+    );
+    return {
+      id: localAsset.id,
+      path: localAsset.path,
+      checksum: localAsset.checksum,
+      toUpload: checkedAsset.action === "Accept",
+    };
   });
-  log(await Promise.all(test));
 
-  log("Comparing local assets with those on the Immich instance...");
+  const assetsToUpload = checkedAssets.filter(
+    (asset) => asset.action === "Accept"
+  );
 
-  const backupAsset = await getAssetInfoFromServer(endpoint, key, deviceId);
-
-  const newAssets = localAssets.filter((a) => !backupAsset.includes(a.id));
-  if (localAssets.length == 0 || (newAssets.length == 0 && !createAlbums)) {
+  if (
+    assetsToUpload.length == 0 ||
+    (assetsToUpload.length == 0 && !createAlbums)
+  ) {
     log(chalk.green("All assets have been backed up to the server"));
     process.exit(0);
   } else {
     log(
       chalk.green(
-        `A total of ${newAssets.length} assets will be uploaded to the server`
+        `A total of ${assetsToUpload.length} assets will be uploaded to the server`
       )
     );
   }
@@ -259,7 +299,7 @@ async function upload(
   if (createAlbums) {
     log(
       chalk.green(
-        `A total of ${localAssets.length} assets will be added to album(s).\n` +
+        `A total of ${checkedAssets.length} assets will be added to album(s).\n` +
           "NOTE: some assets may already be associated with the album, this will not create duplicates."
       )
     );
@@ -290,7 +330,7 @@ async function upload(
         },
         cliProgress.Presets.shades_classic
       );
-      progressBar.start(localAssets.length, 0, { filepath: "" });
+      progressBar.start(assetsToUpload.length, 0, { filepath: "" });
 
       const assetDirectoryMap: Map<string, string[]> = new Map();
 
@@ -298,29 +338,28 @@ async function upload(
 
       const limit = pLimit(uploadThreads ?? 5);
 
-      for (const asset of localAssets) {
-        const album = asset.filePath.split(path.sep).slice(-2)[0];
+      for (const asset of allAssets) {
+        const album = asset.path.split(path.sep).slice(-2)[0];
         if (!assetDirectoryMap.has(album)) {
           assetDirectoryMap.set(album, []);
         }
 
-        if (!backupAsset.includes(asset.id)) {
-          // New file, lets upload it!
+        if (asset.toUpload) {
+          // New file, let's upload it!
           uploadQueue.push(
             limit(async () => {
               try {
                 const res = await startUpload(endpoint, key, asset, deviceId);
-                progressBar.increment(1, { filepath: asset.filePath });
+                progressBar.increment(1, { filepath: asset.path });
                 if (res && (res.status == 201 || res.status == 200)) {
                   if (deleteLocalAsset == "y") {
-                    fs.unlink(asset.filePath, (err) => {
+                    fs.unlink(asset.path, (err) => {
                       if (err) {
                         log(err);
                         return;
                       }
                     });
                   }
-                  backupAsset.push(asset.id);
                   assetDirectoryMap.get(album)!.push(res!.data.id);
                 }
               } catch (err) {
@@ -434,8 +473,8 @@ async function startUpload(
   deviceId: string
 ) {
   try {
-    const assetType = getAssetType(asset.filePath);
-    const fileStat = await stat(asset.filePath);
+    const assetType = getAssetType(asset.path);
+    const fileStat = await stat(asset.path);
 
     const data = new FormData();
     data.append("deviceAssetId", asset.id);
@@ -445,10 +484,10 @@ async function startUpload(
     data.append("fileCreatedAt", fileStat.mtime.toISOString());
     data.append("fileModifiedAt", fileStat.mtime.toISOString());
     data.append("isFavorite", JSON.stringify(false));
-    data.append("fileExtension", path.extname(asset.filePath));
+    data.append("fileExtension", path.extname(asset.path));
     data.append("duration", "0:00:00.000000");
 
-    data.append("assetData", fs.createReadStream(asset.filePath));
+    data.append("assetData", fs.createReadStream(asset.path));
 
     const config: AxiosRequestConfig<any> = {
       method: "post",
@@ -537,19 +576,19 @@ async function getAssetInfoFromServer(
   }
 }
 
-async function checkIfAssetsExistOnServer(
+async function checkAssetExistenceOnServer(
   endpoint: string,
   key: string,
   checkAssetExistenceDto: CheckAssetExistenceDto[]
-) {
-  const data = JSON.stringify(checkAssetExistenceDto);
+): Promise<CheckedAssetDto[]> {
+  const data = JSON.stringify({ assets: checkAssetExistenceDto });
   try {
     const res = await axios.post(`${endpoint}/asset/exist`, data, {
       headers: { "x-api-key": key, "Content-Type": "application/json" },
     });
-    return res.data;
+    return res.data.assets;
   } catch (e) {
-    log(chalk.red("Error getting device's uploaded assets"), e);
+    log(chalk.red("Error checking assets on server"), e.message);
     process.exit(1);
   }
 }
@@ -589,4 +628,15 @@ function getAssetType(filePath: string) {
   const mimeType = mime.lookup(filePath) as string;
 
   return mimeType.split("/")[0].toUpperCase();
+}
+
+class CheckAssetExistenceDto {
+  id!: string;
+  checksum!: string;
+}
+
+class CheckedAssetDto {
+  id!: string;
+  action!: string;
+  reason!: string;
 }
