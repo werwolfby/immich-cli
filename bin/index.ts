@@ -247,7 +247,7 @@ async function upload(
         }
         const checksum: string = await sha1(assetPath);
         localAssets.push({
-          path: assetPath,
+          path: `${path.basename(assetPath)}`,
           checksum: checksum,
         });
       } else {
@@ -436,10 +436,15 @@ async function upload(
         }
       }
 
-      log(
-        chalk.yellow(`Failed to upload ${errorAssets.length} files `),
-        errorAssets
-      );
+      log(chalk.yellow(`Failed to upload ${errorAssets.length} files `));
+      for (const errorAsset of errorAssets) {
+        log();
+        log(
+          errorAsset.file + ":",
+          errorAsset.reason.response.status,
+          errorAsset.reason.response.statusText
+        );
+      }
 
       if (errorAssets.length > 0) {
         process.exit(1);
@@ -571,7 +576,7 @@ async function checkIfAssetsExist(
     const res = await axios.post(`${endpoint}/asset/bulk-upload-check`, data, {
       headers: { "x-api-key": key, "Content-Type": "application/json" },
     });
-    const checkedAssetResponseDto: CheckedAssetResponseDto[] = res.data.assets;
+    const checkedAssetResponseDto: CheckedAssetResponseDto[] = res.data.results;
     return checkedAssetResponseDto.map((asset) => ({
       path: asset.id,
       toUpload: asset.action === "Accept",
