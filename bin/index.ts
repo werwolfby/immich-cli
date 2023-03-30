@@ -247,7 +247,7 @@ async function upload(
         }
         const checksum: string = await sha1(assetPath);
         localAssets.push({
-          path: `${path.basename(assetPath)}`,
+          path: assetPath,
           checksum: checksum,
         });
       } else {
@@ -438,11 +438,10 @@ async function upload(
 
       log(chalk.yellow(`Failed to upload ${errorAssets.length} files `));
       for (const errorAsset of errorAssets) {
-        log();
         log(
           errorAsset.file + ":",
-          errorAsset.reason.response.status,
-          errorAsset.reason.response.statusText
+          errorAsset.reason?.response?.status ?? errorAsset.reason,
+          errorAsset.reason?.response?.statusText
         );
       }
 
@@ -469,7 +468,7 @@ async function startUpload(endpoint: string, key: string, asset: any) {
     data.append("fileCreatedAt", fileStat.ctime.toISOString());
     data.append("fileModifiedAt", fileStat.mtime.toISOString());
     data.append("isFavorite", JSON.stringify(false));
-    data.append("fileExtension", path.extname(asset.path));
+    data.append("fileExtension", path.basename(asset.path));
     data.append("duration", "0:00:00.000000");
 
     data.append("assetData", fs.createReadStream(asset.path));
@@ -579,7 +578,7 @@ async function checkIfAssetsExist(
     const checkedAssetResponseDto: CheckedAssetResponseDto[] = res.data.results;
     return checkedAssetResponseDto.map((asset) => ({
       path: asset.id,
-      toUpload: asset.action === "Accept",
+      toUpload: asset.action === "accept",
     }));
   } catch (e) {
     log(chalk.red("Error checking assets on server"), e.message);
