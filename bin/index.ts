@@ -464,13 +464,18 @@ async function startUpload(endpoint: string, key: string, asset: any) {
 
     const data = new FormData();
     data.append("assetType", assetType);
-    // This field is now deprecatd and we'll remove it from the API. Therefore, just set it to mtime for now
     data.append("fileCreatedAt", fileStat.ctime.toISOString());
     data.append("fileModifiedAt", fileStat.mtime.toISOString());
     data.append("isFavorite", JSON.stringify(false));
     data.append("fileExtension", path.basename(asset.path));
     data.append("duration", "0:00:00.000000");
-
+    data.append("deviceId", "CLI");
+    data.append(
+      "deviceAssetId",
+      `${path.basename(asset.path)}-${
+        fileStat.size
+      }-${fileStat.ctime.toISOString()}`.replace(/\s+/g, "")
+    );
     data.append("assetData", fs.createReadStream(asset.path));
 
     const config: AxiosRequestConfig<any> = {
