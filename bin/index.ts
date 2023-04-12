@@ -467,7 +467,7 @@ async function startUpload(endpoint: string, key: string, asset: any) {
     data.append("fileCreatedAt", fileStat.ctime.toISOString());
     data.append("fileModifiedAt", fileStat.mtime.toISOString());
     data.append("isFavorite", JSON.stringify(false));
-    data.append("fileExtension", path.basename(asset.path));
+    data.append("fileExtension", path.extname(asset.path));
     data.append("duration", "0:00:00.000000");
     data.append("deviceId", "CLI");
     data.append(
