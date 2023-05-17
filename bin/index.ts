@@ -319,138 +319,136 @@ async function upload(
       process.exit(1);
     }
 
-    if (answer == "y") {
-      log(chalk.green("Starting upload..."));
-      const progressBar = new cliProgress.SingleBar(
-        {
-          format:
-            "Upload Progress | {bar} | {percentage}% || {value}/{total} || Current file [{filepath}]",
-        },
-        cliProgress.Presets.shades_classic
-      );
-      progressBar.start(numberOfUploads, 0, { filepath: "" });
+    log(chalk.green("Starting upload..."));
+    const progressBar = new cliProgress.SingleBar(
+      {
+        format:
+          "Upload Progress | {bar} | {percentage}% || {value}/{total} || Current file [{filepath}]",
+      },
+      cliProgress.Presets.shades_classic
+    );
+    progressBar.start(numberOfUploads, 0, { filepath: "" });
 
-      const assetDirectoryMap: Map<string, string[]> = new Map();
+    const assetDirectoryMap: Map<string, string[]> = new Map();
 
-      const uploadQueue = [];
+    const uploadQueue = [];
 
-      const limit = pLimit(uploadThreads ?? 5);
+    const limit = pLimit(uploadThreads ?? 5);
 
-      for (const asset of checkedAssets) {
-        const album = asset.path.split(path.sep).slice(-2)[0];
-        if (!assetDirectoryMap.has(album)) {
-          assetDirectoryMap.set(album, []);
-        }
-
-        if (asset.toUpload) {
-          // New file, let's upload it!
-          uploadQueue.push(
-            limit(async () => {
-              try {
-                const res = await startUpload(endpoint, key, asset);
-                progressBar.increment(1, { filepath: asset.path });
-                if (res && (res.status == 201 || res.status == 200)) {
-                  if (deleteLocalAsset == "y") {
-                    fs.unlink(asset.path, (err) => {
-                      if (err) {
-                        log(err);
-                        return;
-                      }
-                    });
-                  }
-                  assetDirectoryMap.get(album)!.push(res!.data.id);
-                }
-              } catch (err) {
-                log(chalk.red(err.message));
-              }
-            })
-          );
-        } else if (createAlbums) {
-          // Existing file. No need to upload it BUT lets still add to Album.
-          uploadQueue.push(
-            limit(async () => {
-              try {
-                assetDirectoryMap.get(album)!.push(asset.path);
-              } catch (err) {
-                log(chalk.red(err.message));
-              }
-            })
-          );
-        }
+    for (const asset of checkedAssets) {
+      const album = asset.path.split(path.sep).slice(-2)[0];
+      if (!assetDirectoryMap.has(album)) {
+        assetDirectoryMap.set(album, []);
       }
 
-      const uploads = await Promise.all(uploadQueue);
-
-      progressBar.stop();
-
-      if (createAlbums) {
-        log(chalk.green("Creating albums..."));
-
-        const serverAlbums = await getAlbumsFromServer(endpoint, key);
-
-        if (typeof createAlbums === "boolean") {
-          progressBar.start(assetDirectoryMap.size, 0);
-
-          for (const localAlbum of assetDirectoryMap.keys()) {
-            const serverAlbumIndex = serverAlbums.findIndex(
-              (album: any) => album.albumName === localAlbum
-            );
-            let albumId: string;
-            if (serverAlbumIndex > -1) {
-              albumId = serverAlbums[serverAlbumIndex].id;
-            } else {
-              albumId = await createAlbum(endpoint, key, localAlbum);
+      if (asset.toUpload) {
+        // New file, let's upload it!
+        uploadQueue.push(
+          limit(async () => {
+            try {
+              const res = await startUpload(endpoint, key, asset);
+              progressBar.increment(1, { filepath: asset.path });
+              if (res && (res.status == 201 || res.status == 200)) {
+                if (deleteLocalAsset == "y") {
+                  fs.unlink(asset.path, (err) => {
+                    if (err) {
+                      log(err);
+                      return;
+                    }
+                  });
+                }
+                assetDirectoryMap.get(album)!.push(res!.data.id);
+              }
+            } catch (err) {
+              log(chalk.red(err.message));
             }
-
-            if (albumId) {
-              await addAssetsToAlbum(
-                endpoint,
-                key,
-                albumId,
-                assetDirectoryMap.get(localAlbum)!
-              );
+          })
+        );
+      } else if (createAlbums) {
+        // Existing file. No need to upload it BUT lets still add to Album.
+        uploadQueue.push(
+          limit(async () => {
+            try {
+              assetDirectoryMap.get(album)!.push(asset.path);
+            } catch (err) {
+              log(chalk.red(err.message));
             }
+          })
+        );
+      }
+    }
 
-            progressBar.increment();
-          }
+    const uploads = await Promise.all(uploadQueue);
 
-          progressBar.stop();
-        } else {
+    progressBar.stop();
+
+    if (createAlbums) {
+      log(chalk.green("Creating albums..."));
+
+      const serverAlbums = await getAlbumsFromServer(endpoint, key);
+
+      if (typeof createAlbums === "boolean") {
+        progressBar.start(assetDirectoryMap.size, 0);
+
+        for (const localAlbum of assetDirectoryMap.keys()) {
           const serverAlbumIndex = serverAlbums.findIndex(
-            (album: any) => album.albumName === createAlbums
+            (album: any) => album.albumName === localAlbum
           );
           let albumId: string;
-
           if (serverAlbumIndex > -1) {
             albumId = serverAlbums[serverAlbumIndex].id;
           } else {
-            albumId = await createAlbum(endpoint, key, createAlbums);
+            albumId = await createAlbum(endpoint, key, localAlbum);
           }
 
-          await addAssetsToAlbum(
-            endpoint,
-            key,
-            albumId,
-            Array.from(assetDirectoryMap.values()).flat()
-          );
-        }
-      }
+          if (albumId) {
+            await addAssetsToAlbum(
+              endpoint,
+              key,
+              albumId,
+              assetDirectoryMap.get(localAlbum)!
+            );
+          }
 
-      log(chalk.yellow(`Failed to upload ${errorAssets.length} files `));
-      for (const errorAsset of errorAssets) {
-        log(
-          errorAsset.file + ":",
-          errorAsset.reason?.response?.status ?? errorAsset.reason,
-          errorAsset.reason?.response?.statusText
+          progressBar.increment();
+        }
+
+        progressBar.stop();
+      } else {
+        const serverAlbumIndex = serverAlbums.findIndex(
+          (album: any) => album.albumName === createAlbums
+        );
+        let albumId: string;
+
+        if (serverAlbumIndex > -1) {
+          albumId = serverAlbums[serverAlbumIndex].id;
+        } else {
+          albumId = await createAlbum(endpoint, key, createAlbums);
+        }
+
+        await addAssetsToAlbum(
+          endpoint,
+          key,
+          albumId,
+          Array.from(assetDirectoryMap.values()).flat()
         );
       }
-
-      if (errorAssets.length > 0) {
-        process.exit(1);
-      }
-
-      process.exit(0);
     }
+
+    log(chalk.yellow(`Failed to upload ${errorAssets.length} files `));
+    for (const errorAsset of errorAssets) {
+      log(
+        errorAsset.file + ":",
+        errorAsset.reason?.response?.status ?? errorAsset.reason,
+        errorAsset.reason?.response?.statusText
+      );
+    }
+
+    if (errorAssets.length > 0) {
+      process.exit(1);
+    }
+
+    process.exit(0);
   } catch (e) {
     log(chalk.red("Error reading input from user "), e);
     process.exit(1);
@@ -494,6 +492,12 @@ async function startUpload(endpoint: string, key: string, asset: any) {
     const res = await axios(config);
     return res;
   } catch (e) {
+    log();
+    log(
+      `${asset.path}: ${e.reason?.response?.status ?? e.reason ?? e} ${
+        e.reason?.response?.statusText ?? ""
+      }`
+    );
     errorAssets.push({
       file: asset.path,
       reason: e,
