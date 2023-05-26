@@ -66,6 +66,7 @@ program
   .addOption(
     new Option('-t, --threads <num>', 'Amount of concurrent upload threads (default=5)').env('IMMICH_UPLOAD_THREADS'),
   )
+  .addOption(new Option('-id, --device-uuid <value>', 'Set a device UUID').env('IMMICH_DEVICE_UUID'))
   .addOption(
     new Option('-al, --album [album]', 'Create albums for assets based on the parent folder or a given name').env(
       'IMMICH_CREATE_ALBUMS',
