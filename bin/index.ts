@@ -66,7 +66,6 @@ program
   .addOption(
     new Option('-t, --threads <num>', 'Amount of concurrent upload threads (default=5)').env('IMMICH_UPLOAD_THREADS'),
   )
-  .addOption(new Option('-id, --device-uuid <value>', 'Set a device UUID').env('IMMICH_DEVICE_UUID'))
   .addOption(
     new Option('-al, --album [album]', 'Create albums for assets based on the parent folder or a given name').env(
       'IMMICH_CREATE_ALBUMS',
@@ -205,6 +204,7 @@ async function upload(
     const mimeType = mime.lookup(assetPath) as string;
     if (SUPPORTED_MIME_TYPES.includes(mimeType)) {
       if (!skipHash) {
+        // TODO: Add progress bar to hashing
         hashCounter++;
         if (hashCounter % 10 == 0 || hashCounter == uniquePaths.size) {
           log(hashCounter + ' of ' + uniquePaths.size);
@@ -230,9 +230,10 @@ async function upload(
   let checkedAssets: CheckedAssetDto[];
 
   if (skipHash) {
+    // We are skipping the hash check so upload all local assets
     checkedAssets = localAssets;
   } else {
-    log('Checking which assets to upload...');
+    log('Comparing hashes with server...');
     checkedAssets = await checkIfAssetsExist(endpoint, key, localAssets);
   }
 
@@ -402,17 +403,18 @@ async function startUpload(endpoint: string, key: string, asset: any) {
     const fileStat = await stat(asset.path);
 
     const data = new FormData();
+    data.append(
+      'deviceAssetId',
+      `${path.basename(asset.path)}-${fileStat.size}-${fileStat.ctime.toISOString()}`.replace(/\s+/g, ''),
+    );
+    data.append('deviceId', 'CLI');
     data.append('assetType', assetType);
     data.append('fileCreatedAt', fileStat.ctime.toISOString());
     data.append('fileModifiedAt', fileStat.mtime.toISOString());
     data.append('isFavorite', JSON.stringify(false));
     data.append('fileExtension', path.extname(asset.path));
     data.append('duration', '0:00:00.000000');
-    data.append('deviceId', 'CLI');
-    data.append(
-      'deviceAssetId',
-      `${path.basename(asset.path)}-${fileStat.size}-${fileStat.ctime.toISOString()}`.replace(/\s+/g, ''),
-    );
+
     data.append('assetData', fs.createReadStream(asset.path));
 
     try {
