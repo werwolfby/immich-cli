@@ -9,8 +9,6 @@ import * as path from 'path';
 import FormData from 'form-data';
 import * as cliProgress from 'cli-progress';
 import { stat } from 'fs/promises';
-import { createHash } from 'crypto';
-
 // GLOBAL
 import * as mime from 'mime-types';
 import chalk from 'chalk';
@@ -67,13 +65,6 @@ program
   .addOption(new Option('-da, --delete', 'Delete local assets after upload').env('IMMICH_DELETE_ASSETS'))
   .addOption(
     new Option('-t, --threads <num>', 'Amount of concurrent upload threads (default=5)').env('IMMICH_UPLOAD_THREADS'),
-  )
-  .addOption(new Option('-r, --recursive', 'Recursive').env('IMMICH_RECURSIVE').default(false))
-  .addOption(new Option('-y, --yes', 'Assume yes on all interactive prompts').env('IMMICH_ASSUME_YES'))
-  .addOption(new Option('-da, --delete', 'Delete local assets after upload').env('IMMICH_DELETE_ASSETS'))
-  .addOption(new Option('-id, --device-uuid <value>', 'Set a device UUID').env('IMMICH_DEVICE_UUID'))
-  .addOption(
-    new Option('-t, --threads', 'Amount of concurrent upload threads (default=5)').env('IMMICH_UPLOAD_THREADS'),
   )
   .addOption(
     new Option('-al, --album [album]', 'Create albums for assets based on the parent folder or a given name').env(
