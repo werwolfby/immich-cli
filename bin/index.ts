@@ -361,7 +361,11 @@ async function upload(
         }
       }
 
-      log(chalk.yellow(`Failed to upload ${errorAssets.length} files `), errorAssets);
+      // log(chalk.yellow(`Failed to upload ${errorAssets.length} files `), errorAssets);
+
+      for (const error of errorAssets) {
+        log(error.response.message)
+      }
 
       if (errorAssets.length > 0) {
         process.exit(1);
@@ -389,27 +393,28 @@ async function startUpload(endpoint: string, key: string, asset: any, deviceId: 
       isFavorite: JSON.stringify(false),
       fileExtension: path.extname(asset.filePath),
       duration: '0:00:00.000000',
-      assetData: asset.filePath,
       isReadOnly: true,
     }
-
-    try {
-      await fs.promises.access(`${asset.filePath}.xmp`, fs.constants.W_OK);
-      data.sidecarData = path.resolve(`${asset.filePath}.xmp`)
-    } catch (e) {}
 
     const formData = new FormData()
     if (!doImport) {
       for (const prop in data) {
-        if (prop == "assetData") {
-          formData.append(prop, fs.createReadStream(data[prop]));
-        } else if (prop == "sidecarData") {
-          formData.append(prop, fs.createReadStream(data[prop]), { contentType: 'application/xml' });
-        } else {
-          formData.append(prop, data[prop])
-        }
+        formData.append(prop, data[prop])
       }
+
+      formData.append("assetData", fs.createReadStream(asset.filePath));
+    } else {
+      data.assetPath = asset.filePath;
     }
+
+    try {
+      await fs.promises.access(`${asset.filePath}.xmp`, fs.constants.W_OK);
+      if (doImport) {
+        data.sidecarPath = path.resolve(`${asset.filePath}.xmp`)
+      } else {
+        formData.append("sidecarData", fs.createReadStream(path.resolve(`${asset.filePath}.xmp`)), { contentType: 'application/xml' });
+      }
+    } catch (e) {}
 
     const config: AxiosRequestConfig<any> = {
       method: 'post',
