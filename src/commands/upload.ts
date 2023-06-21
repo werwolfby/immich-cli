@@ -10,7 +10,7 @@ import { AlbumService, DirectoryService, UploadService } from '../services';
 // ./bin/run upload -k ol7fY271I58KF2ZdcwqG31GRhFFqhzTR3X9ZRRWBI -s http://10.1.15.216:2283/api -d ./test-assets
 
 export default class Upload extends BaseCommand<typeof Upload> {
-  static description = "Upload images and videos in a directory to Immich's server";
+  static description = 'Upload assets to server';
 
   static flags = {
     directory: Flags.string({ char: 'd', required: true, description: 'Directory to upload from' }),
@@ -45,29 +45,29 @@ export default class Upload extends BaseCommand<typeof Upload> {
     }
 
     console.log('remoteAssetMap', remoteAssetMap);
-    console.log('remoteAlbums', remoteAlbums)
+    console.log('remoteAlbums', remoteAlbums);
     // await (this.flags.watch ? this.watch() : this.runOnce());
 
-    this.files$.pipe(
-      mergeMap(
-        (
-          async (file: any) => {
-            console.log('file', file.path);
-            return file;
-          }
-        ),
-      ),
-    ).subscribe(() => console.log('ok'));
+    this.files$
+      .pipe(
+        mergeMap(async (file: any) => {
+          console.log('file', file.path);
+          return file;
+        }),
+      )
+      .subscribe(() => console.log('ok'));
 
-    chokidar.watch(this.flags.directory, {
-      ignored: /(^|[/\\])\../,
-      persistent: this.flags.watch,
-      awaitWriteFinish: true,
-    }).on('add', (path, stat) => {
-      if (this.directoryService.filterAcceptedFileType(path)) {
-        this.files$.next({ path, stat });
-      }
-    })
+    chokidar
+      .watch(this.flags.directory, {
+        ignored: /(^|[/\\])\../,
+        persistent: this.flags.watch,
+        awaitWriteFinish: true,
+      })
+      .on('add', (path, stat) => {
+        if (this.directoryService.filterAcceptedFileType(path)) {
+          this.files$.next({ path, stat });
+        }
+      });
   }
 
   // async watch(): Promise<void> {

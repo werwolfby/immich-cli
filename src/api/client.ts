@@ -4,7 +4,6 @@ import {
   AssetApi,
   AuthenticationApi,
   Configuration,
-  DeviceInfoApi,
   JobApi,
   OAuthApi,
   ServerInfoApi,
@@ -19,7 +18,6 @@ export class ImmichApi {
   public assetApi: AssetApi;
   public authenticationApi: AuthenticationApi;
   public oauthApi: OAuthApi;
-  public deviceInfoApi: DeviceInfoApi;
   public serverInfoApi: ServerInfoApi;
   public jobApi: JobApi;
   public keyApi: APIKeyApi;
@@ -49,7 +47,6 @@ export class ImmichApi {
     this.assetApi = new AssetApi(this.config);
     this.authenticationApi = new AuthenticationApi(this.config);
     this.oauthApi = new OAuthApi(this.config);
-    this.deviceInfoApi = new DeviceInfoApi(this.config);
     this.serverInfoApi = new ServerInfoApi(this.config);
     this.jobApi = new JobApi(this.config);
     this.keyApi = new APIKeyApi(this.config);
