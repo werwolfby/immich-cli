@@ -4,6 +4,7 @@ import yaml from 'yaml';
 import path from 'node:path';
 import { ImmichApi } from '../api/client';
 import { AuthConfig } from '../cores/models/auth-config';
+import { exit } from 'node:process';
 
 export class SessionService {
   readonly config!: Config;
@@ -17,13 +18,16 @@ export class SessionService {
   }
 
   public async connect(): Promise<ImmichApi> {
-    let authConfig: AuthConfig;
-    try {
-      authConfig = yaml.parse(fs.readFileSync(this.authPath, 'utf8')) as AuthConfig;
-    } catch (error) {
-      console.log(error);
-      throw error;
-    }
+    fs.access(this.authPath, fs.constants.F_OK, (error) => {
+      if (error) {
+        console.error('Cannot load existing session. Please login first');
+        exit(1);
+      }
+    });
+
+    const data: string = await fs.promises.readFile(this.authPath, 'utf8');
+
+    const authConfig = yaml.parse(data) as AuthConfig;
 
     const api = new ImmichApi(authConfig.instanceUrl, authConfig.apiKey);
 

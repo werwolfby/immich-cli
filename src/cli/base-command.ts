@@ -38,8 +38,6 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
   }
 
   public async connect(): Promise<void> {
-    this.immichApi = await this.sessionService.connect().catch((error) => {
-      this.error(`Failed to connect to the server: ${error.message}`);
-    });
+    this.immichApi = await this.sessionService.connect();
   }
 }
