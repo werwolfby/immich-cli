@@ -29,12 +29,12 @@ export class ImmichApi {
 
   private config;
 
-  constructor(address: URL, apiKey: string) {
-    this.serverUrl = address.toString();
+  constructor(address: string, apiKey: string) {
+    this.serverUrl = address;
     this.key = apiKey;
 
     this.config = new Configuration({
-      basePath: address.toString(),
+      basePath: address,
       baseOptions: {
         headers: {
           'x-api-key': apiKey,
