@@ -2,7 +2,7 @@ import { ServerVersionReponseDto } from 'immich-sdk';
 import { BaseCommand } from '../cli/base-command';
 import { ux } from '@oclif/core';
 
-export default class Info extends BaseCommand<typeof Info> {
+export default class ServerInfo extends BaseCommand<typeof ServerInfo> {
   static description = 'Display server information';
   static enableJsonFlag = true;
 
