@@ -390,10 +390,10 @@ async function startUpload(endpoint: string, key: string, asset: any, deviceId: 
       assetType,
       fileCreatedAt: fileStat.mtime.toISOString(),
       fileModifiedAt: fileStat.mtime.toISOString(),
-      isFavorite: JSON.stringify(false),
+      isFavorite: String(false),
       fileExtension: path.extname(asset.filePath),
       duration: '0:00:00.000000',
-      isReadOnly: true,
+      isReadOnly: doImport ? String(true) : String(false),
     }
 
     const formData = new FormData()
