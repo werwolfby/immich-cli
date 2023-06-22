@@ -10,6 +10,7 @@ export class SessionService {
   readonly config!: Config;
   readonly configDir: string;
   readonly authPath!: string;
+  private api!: ImmichApi;
 
   constructor(config: Config) {
     this.config = config;
@@ -29,9 +30,45 @@ export class SessionService {
 
     const authConfig = yaml.parse(data) as AuthConfig;
 
-    const api = new ImmichApi(authConfig.instanceUrl, authConfig.apiKey);
+    this.api = new ImmichApi(authConfig.instanceUrl, authConfig.apiKey);
 
-    const { data: pingResponse } = await api.serverInfoApi.pingServer().catch((error) => {
+    await this.ping();
+
+    return this.api;
+  }
+
+  public async keyLogin(instanceUrl: string, apiKey: string): Promise<ImmichApi> {
+    this.api = new ImmichApi(instanceUrl, apiKey);
+
+    // Check if server and api key are valid
+    const { data: userInfo } = await this.api.userApi.getMyUserInfo().catch((error) => {
+      console.error(`Failed to connect to the server: ${error.message}`);
+      throw error;
+    });
+
+    console.log(`Logged in as ${userInfo.email}`);
+
+    if (!fs.existsSync(this.configDir)) {
+      fs.mkdirSync(this.configDir, { recursive: true });
+    }
+
+    const authConfig: AuthConfig = new AuthConfig();
+    authConfig.apiKey = apiKey;
+    authConfig.instanceUrl = instanceUrl;
+
+    fs.writeFileSync(this.authPath, yaml.stringify(authConfig));
+
+    return this.api;
+  }
+
+  public async logout(): Promise<void> {
+    if (fs.existsSync(this.authPath)) {
+      fs.unlinkSync(this.authPath);
+    }
+  }
+
+  private async ping(): Promise<void> {
+    const { data: pingResponse } = await this.api.serverInfoApi.pingServer().catch((error) => {
       console.error(`Failed to connect to the server: ${error.message}`);
       throw error;
     });
@@ -39,7 +76,5 @@ export class SessionService {
     if (pingResponse.res !== 'pong') {
       throw new Error('Unexpected ping reply');
     }
-
-    return api;
   }
 }
