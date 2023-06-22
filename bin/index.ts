@@ -71,6 +71,11 @@ program
       'IMMICH_CREATE_ALBUMS',
     ),
   )
+  .addOption(
+    new Option('-i, --import', 'Import instead of upload').env(
+      'IMMICH_IMPORT',
+    ).default(false)
+  )
   .addOption(new Option('-id, --device-uuid <value>', 'Set a device UUID').env('IMMICH_DEVICE_UUID'))
   .addOption(
     new Option(
@@ -124,6 +129,7 @@ async function upload(
     uploadThreads,
     album: createAlbums,
     deviceUuid: deviceUuid,
+    import: doImport,
   }: any,
 ) {
   const endpoint = server;
@@ -268,7 +274,7 @@ async function upload(
           uploadQueue.push(
             limit(async () => {
               try {
-                const res = await startUpload(endpoint, key, asset, deviceId);
+                const res = await startUpload(endpoint, key, asset, deviceId, doImport);
                 progressBar.increment(1, { filepath: asset.filePath });
                 if (res && (res.status == 201 || res.status == 200)) {
                   if (deleteLocalAsset == 'y') {
@@ -355,7 +361,11 @@ async function upload(
         }
       }
 
-      log(chalk.yellow(`Failed to upload ${errorAssets.length} files `), errorAssets);
+      // log(chalk.yellow(`Failed to upload ${errorAssets.length} files `), errorAssets);
+
+      for (const error of errorAssets) {
+        log(error.response.message)
+      }
 
       if (errorAssets.length > 0) {
         process.exit(1);
@@ -369,40 +379,54 @@ async function upload(
   }
 }
 
-async function startUpload(endpoint: string, key: string, asset: any, deviceId: string) {
+async function startUpload(endpoint: string, key: string, asset: any, deviceId: string, doImport: boolean) {
   try {
     const assetType = getAssetType(asset.filePath);
     const fileStat = await stat(asset.filePath);
 
-    const data = new FormData();
-    data.append('deviceAssetId', asset.id);
-    data.append('deviceId', deviceId);
-    data.append('assetType', assetType);
-    // This field is now deprecatd and we'll remove it from the API. Therefore, just set it to mtime for now
-    data.append('fileCreatedAt', fileStat.mtime.toISOString());
-    data.append('fileModifiedAt', fileStat.mtime.toISOString());
-    data.append('isFavorite', JSON.stringify(false));
-    data.append('fileExtension', path.extname(asset.filePath));
-    data.append('duration', '0:00:00.000000');
+    const data: any = {
+      deviceAssetId: asset.id,
+      deviceId,
+      assetType,
+      fileCreatedAt: fileStat.mtime.toISOString(),
+      fileModifiedAt: fileStat.mtime.toISOString(),
+      isFavorite: JSON.stringify(false),
+      fileExtension: path.extname(asset.filePath),
+      duration: '0:00:00.000000',
+      isReadOnly: true,
+    }
 
-    data.append('assetData', fs.createReadStream(asset.filePath));
+    const formData = new FormData()
+    if (!doImport) {
+      for (const prop in data) {
+        formData.append(prop, data[prop])
+      }
+
+      formData.append("assetData", fs.createReadStream(asset.filePath));
+    } else {
+      data.assetPath = asset.filePath;
+    }
 
     try {
       await fs.promises.access(`${asset.filePath}.xmp`, fs.constants.W_OK);
-      data.append('sidecarData', fs.createReadStream(`${asset.filePath}.xmp`), { contentType: 'application/xml' });
+      if (doImport) {
+        data.sidecarPath = path.resolve(`${asset.filePath}.xmp`)
+      } else {
+        formData.append("sidecarData", fs.createReadStream(path.resolve(`${asset.filePath}.xmp`)), { contentType: 'application/xml' });
+      }
     } catch (e) {}
 
     const config: AxiosRequestConfig<any> = {
       method: 'post',
       maxRedirects: 0,
-      url: `${endpoint}/asset/upload`,
+      url: doImport == true ? `${endpoint}/asset/import` : `${endpoint}/asset/upload`,
       headers: {
         'x-api-key': key,
-        ...data.getHeaders(),
+        ...(doImport == false && formData.getHeaders()),
       },
       maxContentLength: Infinity,
       maxBodyLength: Infinity,
-      data: data,
+      data: doImport ? data : formData,
     };
 
     const res = await axios(config);
