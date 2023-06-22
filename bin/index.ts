@@ -364,7 +364,7 @@ async function upload(
       // log(chalk.yellow(`Failed to upload ${errorAssets.length} files `), errorAssets);
 
       for (const error of errorAssets) {
-        console.log(error)
+        console.log("Error asset: ", error)
       }
 
       if (errorAssets.length > 0) {
