@@ -19,11 +19,9 @@ export class SessionService {
   }
 
   public async connect(): Promise<ImmichApi> {
-    fs.access(this.authPath, fs.constants.F_OK, (error) => {
-      if (error) {
-        console.error('Cannot load existing session. Please login first');
-        exit(1);
-      }
+    await fs.promises.access(this.authPath, fs.constants.F_OK).catch((error) => {
+      console.error('Cannot load existing session. Please login first');
+      exit(1);
     });
 
     const data: string = await fs.promises.readFile(this.authPath, 'utf8');
