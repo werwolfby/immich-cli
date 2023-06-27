@@ -66,6 +66,14 @@ describe('SessionService', () => {
     expect(authConfig.apiKey).toBe('pNussssKSYo5WasdgalvKJ1n9kdvaasdfbluPg');
   });
 
+  it('should delete auth file when logging out', async () => {
+    await sessionService.logout();
+
+    await fs.promises.access('/auth.yml', fs.constants.F_OK).catch((error) => {
+      expect(error.message).toContain('ENOENT');
+    });
+  });
+
   afterEach(() => {
     mockfs.restore();
   });
