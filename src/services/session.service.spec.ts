@@ -29,6 +29,7 @@ const mockOptions = class implements Options {
 describe('SessionService', () => {
   let sessionService: SessionService;
   beforeAll(() => {
+    // Write a dummy output before mock-fs to prevent some annoying errors
     console.log();
   });
 
