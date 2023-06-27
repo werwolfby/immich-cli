@@ -4,7 +4,6 @@ import yaml from 'yaml';
 import path from 'node:path';
 import { ImmichApi } from '../api/client';
 import { AuthConfig } from '../cores/models/auth-config';
-import { exit } from 'node:process';
 
 export class SessionService {
   readonly config!: Config;
@@ -20,18 +19,14 @@ export class SessionService {
 
   public async connect(): Promise<ImmichApi> {
     await fs.promises.access(this.authPath, fs.constants.F_OK).catch(() => {
-      console.error('Cannot load existing session. Please login first');
-      exit(1);
+      throw new Error('Cannot load existing session. Please login first');
     });
 
     const data: string = await fs.promises.readFile(this.authPath, 'utf8');
-
     const authConfig = yaml.parse(data) as AuthConfig;
-
     this.api = new ImmichApi(authConfig.instanceUrl, authConfig.apiKey);
 
     await this.ping();
-
     return this.api;
   }
 
@@ -40,8 +35,7 @@ export class SessionService {
 
     // Check if server and api key are valid
     const { data: userInfo } = await this.api.userApi.getMyUserInfo().catch((error) => {
-      console.error(`Failed to connect to the server: ${error.message}`);
-      throw error;
+      throw new Error(`Failed to connect to the server: ${error.message}`);
     });
 
     console.log(`Logged in as ${userInfo.email}`);
@@ -67,8 +61,7 @@ export class SessionService {
 
   private async ping(): Promise<void> {
     const { data: pingResponse } = await this.api.serverInfoApi.pingServer().catch((error) => {
-      console.error(`Failed to connect to the server: ${error.message}`);
-      throw error;
+      throw new Error(`Failed to connect to the server: ${error.message}`);
     });
 
     if (pingResponse.res !== 'pong') {

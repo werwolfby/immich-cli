@@ -46,6 +46,7 @@
     "eslint-plugin-unicorn": "^47.0.0",
     "immich-sdk": "^1.62.0",
     "jest": "^29.5.0",
+    "jest-message-util": "^29.5.0",
     "jest-when": "^3.5.2",
     "mocha": "^10.2.0",
     "mock-fs": "^5.2.0",
