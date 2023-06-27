@@ -19,7 +19,7 @@ export class SessionService {
   }
 
   public async connect(): Promise<ImmichApi> {
-    await fs.promises.access(this.authPath, fs.constants.F_OK).catch((error) => {
+    await fs.promises.access(this.authPath, fs.constants.F_OK).catch(() => {
       console.error('Cannot load existing session. Please login first');
       exit(1);
     });
