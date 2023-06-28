@@ -1,9 +1,8 @@
-import { Flags } from '@oclif/core';
-import chokidar from 'chokidar';
-import { Subject, mergeMap } from 'rxjs';
+import { Args, Flags } from '@oclif/core';
+import { Subject } from 'rxjs';
 import { BaseCommand } from '../cli/base-command';
 import { UploadOptions } from '../cores';
-import { AlbumService, DirectoryService, UploadService } from '../services';
+import { AlbumService, CrawlService, UploadService } from '../services';
 
 // ./bin/dev upload --help
 // ./bin/dev upload -k ol7fY271I58KF2ZdcwqG31GRhFFqhzTR3X9ZRRWBI -s http://10.1.15.216:2283/api -d ./test-assets
@@ -11,10 +10,18 @@ import { AlbumService, DirectoryService, UploadService } from '../services';
 
 export default class Upload extends BaseCommand<typeof Upload> {
   static description = 'Upload assets to server';
-
+  static strict = false;
   static flags = {
-    directory: Flags.string({ char: 'd', required: true, description: 'Directory to upload from' }),
-    watch: Flags.boolean({ char: 'w', description: 'Enable watch mode', default: false }),
+    hash: Flags.boolean({
+      aliases: ['hash'],
+      char: 'h',
+      description: 'Hash files before upload. Slow, but can reduce bandwidth usage',
+    }),
+    recursive: Flags.boolean({
+      aliases: ['recursive'],
+      char: 'r',
+      description: 'Recursive',
+    }),
     createAlbum: Flags.boolean({ aliases: ['al'], char: 'a', description: 'Create album of sub directory on upload' }),
     albumName: Flags.string({
       description: 'Album name (applicable when --createAlbum is present)',
@@ -22,52 +29,23 @@ export default class Upload extends BaseCommand<typeof Upload> {
     }),
   };
 
-  private directoryService!: DirectoryService;
+  static args = {
+    paths: Args.file({ required: true }),
+  };
+
+  private crawlService!: CrawlService;
   private uploadService!: UploadService;
   private albumService!: AlbumService;
   private files$ = new Subject();
 
   public async run(): Promise<void> {
+    const paths: string[] = this.argv;
+
+    await this.connect();
+    this.crawlService.crawl(paths, this.flags.recursive);
+
     const options = new UploadOptions();
     options.deviceId = this.deviceId;
-    options.directory = this.flags.directory;
-
-    this.directoryService = new DirectoryService();
-    this.uploadService = new UploadService(this.immichApi, options);
-    this.albumService = new AlbumService(this.immichApi);
-
-    const remoteIds = await this.uploadService.getUploadedAssetIds();
-    const remoteAssetMap: Record<string, boolean> = {};
-    const remoteAlbums = await this.albumService.getAllAlbums();
-
-    for (const id of remoteIds) {
-      remoteAssetMap[id] = true;
-    }
-
-    console.log('remoteAssetMap', remoteAssetMap);
-    console.log('remoteAlbums', remoteAlbums);
-    // await (this.flags.watch ? this.watch() : this.runOnce());
-
-    this.files$
-      .pipe(
-        mergeMap(async (file: any) => {
-          console.log('file', file.path);
-          return file;
-        }),
-      )
-      .subscribe(() => console.log('ok'));
-
-    chokidar
-      .watch(this.flags.directory, {
-        ignored: /(^|[/\\])\../,
-        persistent: this.flags.watch,
-        awaitWriteFinish: true,
-      })
-      .on('add', (path, stat) => {
-        if (this.directoryService.filterAcceptedFileType(path)) {
-          this.files$.next({ path, stat });
-        }
-      });
   }
 
   // async watch(): Promise<void> {

@@ -9,6 +9,14 @@ export type Flags<T extends typeof Command> = Interfaces.InferredFlags<(typeof B
 export type Args<T extends typeof Command> = Interfaces.InferredArgs<T['args']>;
 
 export abstract class BaseCommand<T extends typeof Command> extends Command {
+  static baseFlags = {
+    verbose: Flags.boolean({
+      char: 'v',
+      summary: 'Verbose',
+      helpGroup: 'GLOBAL',
+    }),
+  };
+
   protected flags!: Flags<T>;
   protected args!: Args<T>;
 
@@ -33,7 +41,10 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
 
     this.flags = flags as Flags<T>;
     this.args = args as Args<T>;
-    this.deviceId = (await si.uuid()).os || 'CLI';
+    console.log('here');
+    console.log(args);
+    const uuid = await si.uuid();
+    this.deviceId = uuid.os || 'CLI';
     this.sessionService = new SessionService(this.config);
   }
 

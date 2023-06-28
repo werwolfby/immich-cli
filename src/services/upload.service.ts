@@ -19,11 +19,6 @@ export class UploadService {
     this.options = options;
   }
 
-  public async getUploadedAssetIds(): Promise<string[]> {
-    const { data } = await this.immichApi.assetApi.getUserAssetsByDeviceId(this.options.deviceId);
-    return data;
-  }
-
   public async uploadFiles(targets: UploadTarget[], uploadEvent$: Subject<UploadEvent>): Promise<void> {
     let uploadLength = targets.length;
     for (const target of targets) {
