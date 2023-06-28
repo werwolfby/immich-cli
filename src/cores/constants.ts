@@ -1,14 +1,14 @@
 // Videos
-const videos = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo', 'video/3gpp'];
+const videos = ['mp4', 'webm', 'mov'];
 
 // Images
-const hiec = ['image/heic', 'image/heif'];
-const jpeg = ['image/jpeg', 'image/jpg'];
-const png = ['image/png'];
-const gif = ['image/gif'];
-const tiff = ['image/tiff'];
-const webp = ['image/webp'];
-const dng = ['image/x-adobe-dng', 'image/dng'];
-const nef = ['image/x-nikon-nef', 'image/nef'];
+const hiec = ['heic', 'heif'];
+const jpeg = ['jpg', 'jpeg'];
+const png = ['png'];
+const gif = ['gif'];
+const tiff = ['tif', 'tiff'];
+const webp = ['webp'];
+const dng = ['dng'];
+const nef = ['nef'];
 
-export const ACCEPTED_MIME_TYPES = [...videos, ...jpeg, ...png, ...hiec, ...gif, ...tiff, ...webp, ...dng, ...nef];
+export const ACCEPTED_FILE_EXTENSIONS = [...videos, ...jpeg, ...png, ...hiec, ...gif, ...tiff, ...webp, ...dng, ...nef];

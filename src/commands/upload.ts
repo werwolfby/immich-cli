@@ -12,8 +12,7 @@ export default class Upload extends BaseCommand {
 
   public async run(paths: string[], recursive: boolean): Promise<void> {
     await this.connect();
-    const crawledFiles: string[] = this.crawlService.crawl(paths, recursive);
-    console.log(crawledFiles);
+    const crawledFiles: string[] = await this.crawlService.crawl(paths, recursive);
     const uuid = await si.uuid();
     this.deviceId = uuid.os || 'CLI';
 

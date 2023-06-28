@@ -1,63 +1,21 @@
-import mime from 'mime-types';
-import fs from 'node:fs';
-import { ACCEPTED_MIME_TYPES, UploadTarget } from '../cores';
-import { fdir, PathsOutput } from 'fdir';
-import path from 'node:path';
+import { ACCEPTED_FILE_EXTENSIONS } from '../cores';
+import { glob } from 'glob';
 
 export class CrawlService {
-  public crawl(pathsToCrawl: string[], recursive: boolean): string[] {
-    let crawler = new fdir().withFullPaths();
-
-    if (!recursive) {
-      // Don't go into subfolders
-      crawler = crawler.withMaxDepth(0);
+  public async crawl(pathsToCrawl: string[], recursive: boolean): Promise<string[]> {
+    let paths: string;
+    if (pathsToCrawl.length === 1) {
+      paths = pathsToCrawl[0];
+    } else {
+      paths = '{' + pathsToCrawl.join(',') + '}';
     }
 
-    const crawledFiles: string[] = [];
-
-    for (const crawlPath of pathsToCrawl) {
-      try {
-        // Check if the path can be accessed
-        fs.accessSync(crawlPath);
-      } catch (error) {
-        throw new Error('Unable to access path ' + crawlPath + ': ' + error);
-      }
-
-      const pathStats = fs.lstatSync(crawlPath);
-
-      if (pathStats.isDirectory()) {
-        // Path is a directory so use the crawler to crawl it (potentially very large list)
-        const children = crawler.crawl(crawlPath).sync() as PathsOutput;
-        for (const child of children) {
-          crawledFiles.push(child);
-        }
-      } else {
-        // Path is a single file
-        crawledFiles.push(path.resolve(crawlPath));
-      }
-    }
-    return crawledFiles;
-  }
-
-  public async buildUploadTarget(path: string): Promise<UploadTarget[]> {
-    if (!fs.existsSync(path)) {
-      throw new Error('Path does not exist');
+    if (recursive) {
+      paths = paths + '/**/';
     }
 
-    const result: UploadTarget[] = [];
-
-    const paths = (await new fdir().withFullPaths().crawl(path).withPromise()) as string[];
-
-    for (const path of paths) {
-      if (this.filterAcceptedFileType(path)) {
-        result.push(new UploadTarget(path));
-      }
-    }
-
-    return result;
-  }
-
-  public filterAcceptedFileType(path: string): boolean {
-    return ACCEPTED_MIME_TYPES.includes(mime.lookup(path) as string);
+    paths = paths + '*.{' + ACCEPTED_FILE_EXTENSIONS.join(',') + '}';
+    console.log(paths);
+    return await glob(paths, { nocase: true, nodir: true });
   }
 }
