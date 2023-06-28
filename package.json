@@ -13,13 +13,9 @@
   "files": [
     "/bin",
     "/dist",
-    "/npm-shrinkwrap.json",
-    "/oclif.manifest.json"
+    "/npm-shrinkwrap.json"
   ],
   "dependencies": {
-    "@oclif/core": "^2.8.7",
-    "@oclif/plugin-help": "^5.2.10",
-    "@oclif/plugin-plugins": "^3.1.5",
     "axios": "^1.4.0",
     "chokidar": "^3.5.3",
     "fdir": "^6.0.1",
@@ -29,7 +25,6 @@
     "systeminformation": "^5.18.4"
   },
   "devDependencies": {
-    "@oclif/test": "^2.3.25",
     "@types/chai": "^4.3.5",
     "@types/chokidar": "^2.1.3",
     "@types/jest": "^29.5.2",
@@ -40,9 +35,8 @@
     "@types/node": "^20.3.1",
     "@typescript-eslint/eslint-plugin": "^5.60.1",
     "chai": "^4.3.7",
+    "commander": "^11.0.0",
     "eslint": "^8.43.0",
-    "eslint-config-oclif": "^4.0.0",
-    "eslint-config-oclif-typescript": "^1.0.3",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-unicorn": "^47.0.0",
     "immich-sdk": "^1.62.0",
@@ -51,7 +45,6 @@
     "jest-when": "^3.5.2",
     "mocha": "^10.2.0",
     "mock-fs": "^5.2.0",
-    "oclif": "^3.9.1",
     "shx": "^0.3.4",
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.1",
@@ -59,30 +52,15 @@
     "typescript": "^5.1.3",
     "yaml": "^2.3.1"
   },
-  "oclif": {
-    "bin": "immich",
-    "dirname": "immich",
-    "commands": "./dist/commands",
-    "plugins": [
-      "@oclif/plugin-help"
-    ],
-    "topicSeparator": " ",
-    "topics": {}
-  },
   "scripts": {
     "build": "shx rm -rf dist && tsc -b",
     "lint": "eslint . --ext .ts --config .eslintrc",
-    "postpack": "shx rm -f oclif.manifest.json",
-    "prepack": "yarn build && oclif manifest && oclif readme",
-    "test": "jest",
-    "version": "oclif readme && git add README.md"
+    "prepack": "yarn build ",
+    "test": "jest"
   },
   "engines": {
     "node": ">=12.0.0"
   },
   "bugs": "https://github.com/immich-app/CLI/issues",
-  "keywords": [
-    "oclif"
-  ],
   "types": "dist/index.d.ts"
 }

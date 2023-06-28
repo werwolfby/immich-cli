@@ -1,4 +1,3 @@
-import { Command, Flags, Interfaces } from '@oclif/core';
 import { ServerVersionReponseDto, UserResponseDto } from 'immich-sdk/dist/api';
 import * as si from 'systeminformation';
 import { ImmichApi } from '../api/client';
@@ -8,7 +7,7 @@ import { SessionService } from '../services/session.service';
 export type Flags<T extends typeof Command> = Interfaces.InferredFlags<(typeof BaseCommand)['baseFlags'] & T['flags']>;
 export type Args<T extends typeof Command> = Interfaces.InferredArgs<T['args']>;
 
-export abstract class BaseCommand<T extends typeof Command> extends Command {
+export abstract class BaseCommand {
   static baseFlags = {
     verbose: Flags.boolean({
       char: 'v',
@@ -41,8 +40,6 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
 
     this.flags = flags as Flags<T>;
     this.args = args as Args<T>;
-    console.log('here');
-    console.log(args);
     const uuid = await si.uuid();
     this.deviceId = uuid.os || 'CLI';
     this.sessionService = new SessionService(this.config);

@@ -1,4 +1,3 @@
-import { Args, Flags } from '@oclif/core';
 import { Subject } from 'rxjs';
 import { BaseCommand } from '../cli/base-command';
 import { UploadOptions } from '../cores';
@@ -8,7 +7,7 @@ import { AlbumService, CrawlService, UploadService } from '../services';
 // ./bin/dev upload -k ol7fY271I58KF2ZdcwqG31GRhFFqhzTR3X9ZRRWBI -s http://10.1.15.216:2283/api -d ./test-assets
 // ./bin/run upload -k ol7fY271I58KF2ZdcwqG31GRhFFqhzTR3X9ZRRWBI -s http://10.1.15.216:2283/api -d ./test-assets
 
-export default class Upload extends BaseCommand<typeof Upload> {
+export default class Upload extends BaseCommand {
   static description = 'Upload assets to server';
   static strict = false;
   static flags = {

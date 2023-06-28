@@ -1,7 +1,6 @@
-import { Flags } from '@oclif/core';
 import { BaseCommand } from '../../cli/base-command';
 
-export default class LoginKey extends BaseCommand<typeof LoginKey> {
+export default class LoginKey extends BaseCommand {
   public static readonly description = 'Login using an API key';
 
   public static flags = {
@@ -20,7 +19,7 @@ export default class LoginKey extends BaseCommand<typeof LoginKey> {
   };
 
   public async run(): Promise<void> {
-    this.debug('Executing API key auth flow...');
+    console.log('Executing API key auth flow...');
     const instanceUrl = this.flags['instance-url'];
     const apiKey = this.flags['api-key'];
 
