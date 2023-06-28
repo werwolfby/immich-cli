@@ -51,6 +51,7 @@ export class SessionService {
     console.log(`Logged in as ${userInfo.email}`);
 
     if (!fs.existsSync(this.configDir)) {
+      // Create config folder if it doesn't exist
       fs.mkdirSync(this.configDir, { recursive: true });
     }
 

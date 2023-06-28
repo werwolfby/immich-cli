@@ -34,14 +34,14 @@ describe('SessionService', () => {
 
   beforeEach(() => {
     const config = new Config(new mockOptions());
-    config.configDir = '/';
+    config.configDir = '/config';
 
     sessionService = new SessionService(config);
   });
 
   it('should connect to immich', async () => {
     mockfs({
-      '/auth.yml': 'apiKey: pNussssKSYo5WasdgalvKJ1n9kdvaasdfbluPg\ninstanceUrl: https://test/api',
+      '/config/auth.yml': 'apiKey: pNussssKSYo5WasdgalvKJ1n9kdvaasdfbluPg\ninstanceUrl: https://test/api',
     });
     await sessionService.connect();
     expect(mockPingServer).toHaveBeenCalledTimes(1);
@@ -56,19 +56,19 @@ describe('SessionService', () => {
 
   it('should error if auth file is missing instance URl', async () => {
     mockfs({
-      '/auth.yml': 'foo: pNussssKSYo5WasdgalvKJ1n9kdvaasdfbluPg\napiKey: https://test/api',
+      '/config/auth.yml': 'foo: pNussssKSYo5WasdgalvKJ1n9kdvaasdfbluPg\napiKey: https://test/api',
     });
     await sessionService.connect().catch((error) => {
-      expect(error.message).toEqual('Instance URL missing in auth config file /auth.yml');
+      expect(error.message).toEqual('Instance URL missing in auth config file /config/auth.yml');
     });
   });
 
   it('should error if auth file is missing api key', async () => {
     mockfs({
-      '/auth.yml': 'instanceUrl: pNussssKSYo5WasdgalvKJ1n9kdvaasdfbluPg\nbar: https://test/api',
+      '/config/auth.yml': 'instanceUrl: pNussssKSYo5WasdgalvKJ1n9kdvaasdfbluPg\nbar: https://test/api',
     });
     await sessionService.connect().catch((error) => {
-      expect(error.message).toEqual('API key missing in auth config file /auth.yml');
+      expect(error.message).toEqual('API key missing in auth config file /config/auth.yml');
     });
   });
 
@@ -77,7 +77,7 @@ describe('SessionService', () => {
 
     await sessionService.keyLogin('https://test/api', 'pNussssKSYo5WasdgalvKJ1n9kdvaasdfbluPg');
 
-    const data: string = await fs.promises.readFile('/auth.yml', 'utf8');
+    const data: string = await fs.promises.readFile('/config/auth.yml', 'utf8');
     const authConfig = yaml.parse(data);
     expect(authConfig.instanceUrl).toBe('https://test/api');
     expect(authConfig.apiKey).toBe('pNussssKSYo5WasdgalvKJ1n9kdvaasdfbluPg');
@@ -85,7 +85,7 @@ describe('SessionService', () => {
 
   it('should delete auth file when logging out', async () => {
     mockfs({
-      '/auth.yml': 'apiKey: pNussssKSYo5WasdgalvKJ1n9kdvaasdfbluPg\ninstanceUrl: https://test/api',
+      '/config/auth.yml': 'apiKey: pNussssKSYo5WasdgalvKJ1n9kdvaasdfbluPg\ninstanceUrl: https://test/api',
     });
     await sessionService.logout();
 
