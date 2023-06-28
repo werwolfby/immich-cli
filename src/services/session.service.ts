@@ -1,23 +1,21 @@
 import fs from 'node:fs';
-import { Config } from '@oclif/core';
 import yaml from 'yaml';
 import path from 'node:path';
 import { ImmichApi } from '../api/client';
 
 export class SessionService {
-  readonly config!: Config;
   readonly configDir: string;
   readonly authPath!: string;
   private api!: ImmichApi;
 
-  constructor(config: Config) {
-    this.config = config;
-    this.configDir = this.config.configDir;
+  constructor(configDir: string) {
+    this.configDir = configDir;
     this.authPath = path.join(this.configDir, 'auth.yml');
   }
 
   public async connect(): Promise<ImmichApi> {
-    await fs.promises.access(this.authPath, fs.constants.F_OK).catch(() => {
+    await fs.promises.access(this.authPath, fs.constants.F_OK).catch((error) => {
+      console.log(error);
       throw new Error('Cannot load existing session. Please login first');
     });
 

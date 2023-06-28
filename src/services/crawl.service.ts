@@ -4,33 +4,8 @@ import { ACCEPTED_MIME_TYPES, UploadTarget } from '../cores';
 import { fdir, PathsOutput } from 'fdir';
 import path from 'node:path';
 
-const SUPPORTED_MIME_TYPES = [
-  // IMAGES
-  'image/heif',
-  'image/heic',
-  'image/jpeg',
-  'image/png',
-  'image/jpg',
-  'image/gif',
-  'image/heic',
-  'image/heif',
-  'image/dng',
-  'image/x-adobe-dng',
-  'image/webp',
-  'image/tiff',
-  'image/nef',
-  'image/x-nikon-nef',
-
-  // VIDEO
-  'video/mp4',
-  'video/webm',
-  'video/quicktime',
-  'video/x-msvideo',
-  'video/3gpp',
-];
-
 export class CrawlService {
-  public async crawl(pathsToCrawl: string[], recursive: boolean): Promise<string[]> {
+  public crawl(pathsToCrawl: string[], recursive: boolean): string[] {
     let crawler = new fdir().withFullPaths();
 
     if (!recursive) {
@@ -61,6 +36,7 @@ export class CrawlService {
         crawledFiles.push(path.resolve(crawlPath));
       }
     }
+    return crawledFiles;
   }
 
   public async buildUploadTarget(path: string): Promise<UploadTarget[]> {

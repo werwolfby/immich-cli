@@ -1,6 +1,4 @@
-import { Config } from '@oclif/core';
 import { SessionService } from './session.service';
-import { Options } from '@oclif/core/lib/interfaces/plugin';
 import mockfs from 'mock-fs';
 import fs from 'node:fs';
 import yaml from 'yaml';
@@ -21,10 +19,6 @@ jest.mock('immich-sdk', () => {
   };
 });
 
-const mockOptions = class implements Options {
-  root: string = 'blargh';
-};
-
 describe('SessionService', () => {
   let sessionService: SessionService;
   beforeAll(() => {
@@ -33,10 +27,8 @@ describe('SessionService', () => {
   });
 
   beforeEach(() => {
-    const config = new Config(new mockOptions());
-    config.configDir = '/config';
-
-    sessionService = new SessionService(config);
+    const configDir = '/config';
+    sessionService = new SessionService(configDir);
   });
 
   it('should connect to immich', async () => {
