@@ -3,7 +3,6 @@ import { Config } from '@oclif/core';
 import yaml from 'yaml';
 import path from 'node:path';
 import { ImmichApi } from '../api/client';
-import { AuthConfig } from '../cores/models/auth-config';
 
 export class SessionService {
   readonly config!: Config;
@@ -23,8 +22,19 @@ export class SessionService {
     });
 
     const data: string = await fs.promises.readFile(this.authPath, 'utf8');
-    const authConfig = yaml.parse(data) as AuthConfig;
-    this.api = new ImmichApi(authConfig.instanceUrl, authConfig.apiKey);
+    const parsedConfig = yaml.parse(data);
+    const instanceUrl: string = parsedConfig.instanceUrl;
+    const apiKey: string = parsedConfig.apiKey;
+
+    if (!instanceUrl) {
+      throw new Error('Instance URL missing in auth config file ' + this.authPath);
+    }
+
+    if (!apiKey) {
+      throw new Error('API key missing in auth config file ' + this.authPath);
+    }
+
+    this.api = new ImmichApi(instanceUrl, apiKey);
 
     await this.ping();
     return this.api;
@@ -44,11 +54,7 @@ export class SessionService {
       fs.mkdirSync(this.configDir, { recursive: true });
     }
 
-    const authConfig: AuthConfig = new AuthConfig();
-    authConfig.apiKey = apiKey;
-    authConfig.instanceUrl = instanceUrl;
-
-    fs.writeFileSync(this.authPath, yaml.stringify(authConfig));
+    fs.writeFileSync(this.authPath, yaml.stringify({ instanceUrl: instanceUrl, apiKey: apiKey }));
 
     return this.api;
   }
