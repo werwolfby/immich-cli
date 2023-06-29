@@ -34,7 +34,7 @@ export class UploadTarget {
     try {
       fs.accessSync(sideCarPath, fs.constants.R_OK);
     } catch (err) {
-      // No
+      // No sidecar file
       hasSidecar = false;
     }
     if (hasSidecar) {

@@ -11,11 +11,7 @@ export default class ServerInfo extends BaseCommand {
     await this.connect();
     const { data: versionInfo } = await this.immichApi.serverInfoApi.getServerVersion();
 
-    ux.table([{ key: 'Server Version', value: `v${versionInfo.major}.${versionInfo.minor}.${versionInfo.patch}` }], {
-      key: { header: 'Property' },
-      value: { header: 'Value', minWidth: 20 },
-    });
-
+    console.log(versionInfo);
     return versionInfo;
   }
 }
