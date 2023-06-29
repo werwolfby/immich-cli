@@ -1,4 +1,3 @@
 export class UploadOptions {
-  directory!: string;
-  deviceId!: string;
+  filesToUpload!: string[];
 }

@@ -1,22 +1,23 @@
-import { Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { BaseCommand } from '../cli/base-command';
-import { UploadOptions } from '../cores';
+import { UploadOptions, UploadTarget } from '../cores';
 import { AlbumService, CrawlService, UploadService } from '../services';
 import * as si from 'systeminformation';
+import { UploadEvent } from '../cores/models/upload-event';
 
 export default class Upload extends BaseCommand {
   private crawlService = new CrawlService();
   private uploadService!: UploadService;
-  private albumService!: AlbumService;
-  private files$ = new Subject();
 
   public async run(paths: string[], recursive: boolean): Promise<void> {
     await this.connect();
     const crawledFiles: string[] = await this.crawlService.crawl(paths, recursive);
     const uuid = await si.uuid();
-    this.deviceId = uuid.os || 'CLI';
+    const deviceId: string = uuid.os || 'CLI';
+    this.uploadService = new UploadService(this.immichApi, deviceId);
+    const uploadTargets = crawledFiles.map((path) => new UploadTarget(path));
 
-    const options = new UploadOptions();
-    options.deviceId = this.deviceId;
+    const uploadEvent$ = Observable.create((subject: UploadEvent) => console.log('Hello:' + subject));
+    this.uploadService.uploadFiles(uploadTargets, uploadEvent$);
   }
 }
