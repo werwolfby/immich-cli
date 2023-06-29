@@ -4,6 +4,7 @@ import { stat } from 'node:fs/promises';
 import mime from 'mime-types';
 import { Subject } from 'rxjs';
 import { UploadEvent } from '../cores/models/upload-event';
+import { File } from 'buffer';
 
 export class UploadService {
   private readonly immichApi: ImmichApi;
