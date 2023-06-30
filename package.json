@@ -37,6 +37,7 @@
     "commander": "^11.0.0",
     "eslint": "^8.43.0",
     "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-jest": "^27.2.2",
     "eslint-plugin-unicorn": "^47.0.0",
     "glob": "^10.3.1",
     "immich-sdk": "^1.62.0",
