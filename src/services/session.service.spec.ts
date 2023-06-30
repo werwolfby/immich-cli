@@ -2,6 +2,7 @@ import { SessionService } from './session.service';
 import mockfs from 'mock-fs';
 import fs from 'node:fs';
 import yaml from 'yaml';
+import { LoginError } from '../cores/errors/login-error';
 
 const mockPingServer = jest.fn(() => Promise.resolve({ data: { res: 'pong' } }));
 const mockUserInfo = jest.fn(() => Promise.resolve({ data: { email: 'admin@example.com' } }));
@@ -42,7 +43,7 @@ describe('SessionService', () => {
   it('should error if no auth file exists', async () => {
     mockfs();
     await sessionService.connect().catch((error) => {
-      expect(error.message).toEqual('Cannot load existing session. Please login first');
+      expect(error.message).toEqual('No auth file exist. Please login first');
     });
   });
 
@@ -51,6 +52,7 @@ describe('SessionService', () => {
       '/config/auth.yml': 'foo: pNussssKSYo5WasdgalvKJ1n9kdvaasdfbluPg\napiKey: https://test/api',
     });
     await sessionService.connect().catch((error) => {
+      expect(error).toBeInstanceOf(LoginError);
       expect(error.message).toEqual('Instance URL missing in auth config file /config/auth.yml');
     });
   });
@@ -60,6 +62,7 @@ describe('SessionService', () => {
       '/config/auth.yml': 'instanceUrl: pNussssKSYo5WasdgalvKJ1n9kdvaasdfbluPg\nbar: https://test/api',
     });
     await sessionService.connect().catch((error) => {
+      expect(error).toBeInstanceOf(LoginError);
       expect(error.message).toEqual('API key missing in auth config file /config/auth.yml');
     });
   });

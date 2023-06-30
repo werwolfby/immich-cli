@@ -14,7 +14,8 @@ export class CrawlService {
       paths = paths + '/**/';
     }
 
-    paths = paths + '*.{' + ACCEPTED_FILE_EXTENSIONS.join(',') + '}';
+    paths = paths + '/*.{' + ACCEPTED_FILE_EXTENSIONS.join(',') + '}';
+    console.log(paths);
     return await glob(paths, { nocase: true, nodir: true });
   }
 }

@@ -17,7 +17,7 @@ export class SessionService {
   public async connect(): Promise<ImmichApi> {
     await fs.promises.access(this.authPath, fs.constants.F_OK).catch((error) => {
       if (error.code === 'ENOENT') {
-        throw new LoginError('No auth file exist. Please login first!');
+        throw new LoginError('No auth file exist. Please login first');
       }
     });
 
@@ -27,11 +27,11 @@ export class SessionService {
     const apiKey: string = parsedConfig.apiKey;
 
     if (!instanceUrl) {
-      throw new Error('Instance URL missing in auth config file ' + this.authPath);
+      throw new LoginError('Instance URL missing in auth config file ' + this.authPath);
     }
 
     if (!apiKey) {
-      throw new Error('API key missing in auth config file ' + this.authPath);
+      throw new LoginError('API key missing in auth config file ' + this.authPath);
     }
 
     this.api = new ImmichApi(instanceUrl, apiKey);
@@ -45,7 +45,7 @@ export class SessionService {
 
     // Check if server and api key are valid
     const { data: userInfo } = await this.api.userApi.getMyUserInfo().catch((error) => {
-      throw new Error(`Failed to connect to the server: ${error.message}`);
+      throw new LoginError(`Failed to connect to the server: ${error.message}`);
     });
 
     console.log(`Logged in as ${userInfo.email}`);
@@ -57,12 +57,14 @@ export class SessionService {
 
     fs.writeFileSync(this.authPath, yaml.stringify({ instanceUrl: instanceUrl, apiKey: apiKey }));
 
+    console.log('Wrote auth info to ' + this.authPath);
     return this.api;
   }
 
   public async logout(): Promise<void> {
     if (fs.existsSync(this.authPath)) {
       fs.unlinkSync(this.authPath);
+      console.log('Removed auth file ' + this.authPath);
     }
   }
 
