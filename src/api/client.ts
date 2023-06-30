@@ -51,8 +51,8 @@ export class ImmichApi {
       headers: {
         'x-api-key': apiKey,
       },
-      maxContentLength: Infinity,
-      maxBodyLength: Infinity,
+      maxContentLength: Number.POSITIVE_INFINITY,
+      maxBodyLength: Number.POSITIVE_INFINITY,
     };
 
     this.userApi = new UserApi(this.config);

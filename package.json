@@ -44,6 +44,7 @@
     "jest": "^29.5.0",
     "jest-extended": "^4.0.0",
     "jest-message-util": "^29.5.0",
+    "jest-mock-axios": "^4.7.2",
     "jest-when": "^3.5.2",
     "mock-fs": "^5.2.0",
     "picomatch": "^2.3.1",
@@ -59,11 +60,6 @@
     "lint": "eslint . --ext .ts --config .eslintrc",
     "prepack": "yarn build ",
     "test": "jest"
-  },
-  "jest": {
-    "setupFilesAfterEnv": [
-      "jest-extended/all"
-    ]
   },
   "engines": {
     "node": ">=12.0.0"
