@@ -1,5 +1,5 @@
 import { AssetTypeEnum } from 'immich-sdk';
-import * as fs from 'node:fs';
+import * as fs from 'fs';
 import * as mime from 'mime-types';
 import { basename } from 'node:path';
 import * as path from 'path';
@@ -7,30 +7,35 @@ import * as path from 'path';
 export class UploadTarget {
   public path: string;
 
-  public assetType: AssetTypeEnum;
-  public assetData: File;
-  public deviceAssetId: string;
-  public fileCreatedAt: string;
-  public fileModifiedAt: string;
-  public fileExtension: string;
-  public sideCarData: File | undefined;
+  public assetType?: AssetTypeEnum;
+  public assetData?: Buffer;
+  public deviceAssetId?: string;
+  public fileCreatedAt?: string;
+  public fileModifiedAt?: string;
+  public fileExtension?: string;
+  public sidecarData?: Buffer;
+  public sidecarPath?: string;
 
-  constructor(filePath: string) {
-    this.path = filePath;
-    const fileContentBuffer: Buffer = fs.readFileSync(filePath);
-    this.assetData = new File([fileContentBuffer], filePath);
+  constructor(path: string) {
+    this.path = path;
+  }
+
+  async read() {
+    this.assetData = await fs.promises.readFile(this.path);
     const stats = fs.statSync(this.path);
     this.deviceAssetId = `${basename(this.path)}-${stats.size}`.replace(/\s+/g, '');
-    const mimeType = mime.lookup(filePath);
+    const mimeType = mime.lookup(this.path);
     if (!mimeType) {
-      throw Error('Cannot determine mime type of asset: ' + filePath);
+      throw Error('Cannot determine mime type of asset: ' + this.path);
     }
     this.assetType = mimeType.split('/')[0].toUpperCase() as AssetTypeEnum;
     this.fileCreatedAt = stats.ctime.toISOString();
     this.fileModifiedAt = stats.mtime.toISOString();
-    this.fileExtension = path.extname(filePath);
+    this.fileExtension = path.extname(this.path);
     let hasSidecar = true;
-    const sideCarPath = `${filePath}.xmp`;
+
+    // TODO: doesn't xmp replace the file extension?
+    const sideCarPath = `${this.path}.xmp`;
     try {
       fs.accessSync(sideCarPath, fs.constants.R_OK);
     } catch (err) {
@@ -38,8 +43,8 @@ export class UploadTarget {
       hasSidecar = false;
     }
     if (hasSidecar) {
-      const sideCarBuffer: Buffer = fs.readFileSync(filePath);
-      this.sideCarData = new File([sideCarBuffer], sideCarPath);
+      this.sidecarPath = `${this.path}.xmp`;
+      this.sidecarData = await fs.promises.readFile(this.sidecarPath);
     }
   }
 }

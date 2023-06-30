@@ -1,3 +1,4 @@
+import { AxiosRequestConfig } from 'axios';
 import {
   AlbumApi,
   APIKeyApi,
@@ -24,23 +25,35 @@ export class ImmichApi {
   public systemConfigApi: SystemConfigApi;
   public shareApi: ShareApi;
 
-  public serverUrl: string;
+  public instanceUrl: string;
   public key: string;
 
   private config;
+  private axiosUploadConfig: AxiosRequestConfig;
 
-  constructor(address: string, apiKey: string) {
-    this.serverUrl = address;
+  constructor(instanceUrl: string, apiKey: string) {
+    this.instanceUrl = instanceUrl;
     this.key = apiKey;
 
     this.config = new Configuration({
-      basePath: address,
+      basePath: instanceUrl,
       baseOptions: {
         headers: {
           'x-api-key': apiKey,
         },
       },
     });
+
+    this.axiosUploadConfig = {
+      method: 'post',
+      maxRedirects: 0,
+      url: `${instanceUrl}/asset/upload`,
+      headers: {
+        'x-api-key': apiKey,
+      },
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+    };
 
     this.userApi = new UserApi(this.config);
     this.albumApi = new AlbumApi(this.config);
@@ -52,5 +65,9 @@ export class ImmichApi {
     this.keyApi = new APIKeyApi(this.config);
     this.systemConfigApi = new SystemConfigApi(this.config);
     this.shareApi = new ShareApi(this.config);
+  }
+
+  public get getAxiosUploadConfig() {
+    return this.axiosUploadConfig;
   }
 }

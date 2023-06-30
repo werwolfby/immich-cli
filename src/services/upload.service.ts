@@ -5,6 +5,10 @@ import mime from 'mime-types';
 import { Subject } from 'rxjs';
 import { UploadEvent } from '../cores/models/upload-event';
 import { File } from 'buffer';
+import axios, { AxiosError } from 'axios';
+import { exit } from 'node:process';
+import * as fs from 'fs';
+import FormData from 'form-data';
 
 export class UploadService {
   private readonly immichApi: ImmichApi;
@@ -17,27 +21,35 @@ export class UploadService {
 
   public async uploadFiles(targets: UploadTarget[], uploadEvent$: Subject<UploadEvent>): Promise<void> {
     let uploadLength = targets.length;
+    let uploadCounter: number = 0;
+    console.log('Will upload ' + uploadLength + ' assets');
     for (const target of targets) {
-      const fileStat = await stat(target.path);
+      const formData = new FormData();
+      await target.read();
 
-      const uploadEvent = new UploadEvent();
-      uploadEvent.fileName = target.path;
-      uploadEvent.remainder = uploadLength;
-      uploadEvent$.next(uploadEvent);
+      formData.append('assetType', target.assetType);
+      formData.append('assetData', target.assetData, { filename: target.path });
+      formData.append('deviceAssetId', target.deviceAssetId);
+      formData.append('deviceId', this.deviceId);
+      formData.append('fileCreatedAt', target.fileCreatedAt);
+      formData.append('fileModifiedAt', target.fileModifiedAt);
+      formData.append('isFavorite', String(false));
+      formData.append('fileExtension', target.fileExtension);
+      if (target.sidecarData) {
+        formData.append('sidecarData', target.sidecarData, {
+          filename: target.sidecarPath,
+          contentType: 'application/xml',
+        });
+      }
 
-      await this.immichApi.assetApi.uploadFile(
-        target.assetType,
-        target.assetData,
-        target.deviceAssetId,
-        this.deviceId,
-        target.fileCreatedAt,
-        target.fileModifiedAt,
-        false,
-        target.fileExtension,
-      );
+      let axiosUploadConfig = this.immichApi.getAxiosUploadConfig;
 
-      uploadEvent.remainder = uploadLength--;
-      uploadEvent$.next(uploadEvent);
+      axiosUploadConfig.data = formData;
+
+      await axios(axiosUploadConfig);
+
+      uploadCounter++;
+      console.log(uploadCounter + '/' + uploadLength + ' uploaded: ' + target.path);
     }
   }
 
