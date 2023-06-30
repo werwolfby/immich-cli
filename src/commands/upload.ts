@@ -1,9 +1,7 @@
-import { Observable, Subject } from 'rxjs';
 import { BaseCommand } from '../cli/base-command';
-import { UploadOptions, UploadTarget } from '../cores';
-import { AlbumService, CrawlService, UploadService } from '../services';
+import { UploadTarget } from '../cores';
+import { CrawlService, UploadService } from '../services';
 import * as si from 'systeminformation';
-import { UploadEvent } from '../cores/models/upload-event';
 
 export default class Upload extends BaseCommand {
   private crawlService = new CrawlService();
