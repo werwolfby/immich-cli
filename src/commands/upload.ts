@@ -17,7 +17,7 @@ export default class Upload extends BaseCommand {
     this.uploadService = new UploadService(this.immichApi, deviceId);
     const uploadTargets = crawledFiles.map((path) => new UploadTarget(path));
 
-    const uploadEvent$ = Observable.create((subject: UploadEvent) => console.log('Hello:' + subject));
-    this.uploadService.uploadFiles(uploadTargets, uploadEvent$);
+    this.uploadService.uploadFiles(uploadTargets);
+    console.log('Upload successful');
   }
 }

@@ -1,13 +1,6 @@
 import { ImmichApi } from '../api/client';
 import { UploadTarget } from '../cores';
-import { stat } from 'node:fs/promises';
-import mime from 'mime-types';
-import { Subject } from 'rxjs';
-import { UploadEvent } from '../cores/models/upload-event';
-import { File } from 'buffer';
 import axios, { AxiosError } from 'axios';
-import { exit } from 'node:process';
-import * as fs from 'fs';
 import FormData from 'form-data';
 
 export class UploadService {
@@ -19,9 +12,10 @@ export class UploadService {
     this.deviceId = deviceId;
   }
 
-  public async uploadFiles(targets: UploadTarget[], uploadEvent$: Subject<UploadEvent>): Promise<void> {
+  public async uploadFiles(targets: UploadTarget[]): Promise<void> {
     let uploadLength = targets.length;
     let uploadCounter: number = 0;
+
     console.log('Will upload ' + uploadLength + ' assets');
     for (const target of targets) {
       const formData = new FormData();
@@ -43,7 +37,6 @@ export class UploadService {
       }
 
       let axiosUploadConfig = this.immichApi.getAxiosUploadConfig;
-
       axiosUploadConfig.data = formData;
 
       await axios(axiosUploadConfig);
@@ -51,9 +44,5 @@ export class UploadService {
       uploadCounter++;
       console.log(uploadCounter + '/' + uploadLength + ' uploaded: ' + target.path);
     }
-  }
-
-  private getFileType(filePath: string): string {
-    return (mime.lookup(filePath) as string).split('/')[0].toUpperCase();
   }
 }

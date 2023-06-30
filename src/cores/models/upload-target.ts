@@ -34,7 +34,7 @@ export class UploadTarget {
     this.fileExtension = path.extname(this.path);
     let hasSidecar = true;
 
-    // TODO: doesn't xmp replace the file extension?
+    // TODO: doesn't xmp replace the file extension? Will need investigation
     const sideCarPath = `${this.path}.xmp`;
     try {
       fs.accessSync(sideCarPath, fs.constants.R_OK);
