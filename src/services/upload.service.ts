@@ -39,6 +39,7 @@ export class UploadService {
       let axiosUploadConfig = this.immichApi.getAxiosUploadConfig;
       axiosUploadConfig.data = formData;
 
+      // TODO: retry on 500 errors?
       await axios(axiosUploadConfig);
 
       uploadCounter++;

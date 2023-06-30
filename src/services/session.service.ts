@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import yaml from 'yaml';
 import path from 'node:path';
 import { ImmichApi } from '../api/client';
+import { LoginError } from '../cores/errors/login-error';
 
 export class SessionService {
   readonly configDir: string;
@@ -15,8 +16,9 @@ export class SessionService {
 
   public async connect(): Promise<ImmichApi> {
     await fs.promises.access(this.authPath, fs.constants.F_OK).catch((error) => {
-      console.log(error);
-      throw new Error('Cannot load existing session. Please login first');
+      if (error.code === 'ENOENT') {
+        throw new LoginError('No auth file exist. Please login first!');
+      }
     });
 
     const data: string = await fs.promises.readFile(this.authPath, 'utf8');

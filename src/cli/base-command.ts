@@ -2,6 +2,8 @@ import { ServerVersionReponseDto, UserResponseDto } from 'immich-sdk/dist/api';
 import { ImmichApi } from '../api/client';
 import path from 'node:path';
 import { SessionService } from '../services/session.service';
+import { LoginError } from '../cores/errors/login-error';
+import { exit } from 'node:process';
 
 export abstract class BaseCommand {
   protected sessionService!: SessionService;
@@ -22,6 +24,13 @@ export abstract class BaseCommand {
   }
 
   public async connect(): Promise<void> {
-    this.immichApi = await this.sessionService.connect();
+    try {
+      this.immichApi = await this.sessionService.connect();
+    } catch (error) {
+      if (error instanceof LoginError) {
+        console.log(error.message);
+        exit(1);
+      }
+    }
   }
 }
