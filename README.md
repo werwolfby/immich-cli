@@ -1,8 +1,17 @@
 A new immich cli
 
+# DONE:
+
+- Login
+- Logout
+- Upload
+
 # TODO:
 
-- Implement commands
-- Clean up generator boilerplate
-- Fix README
-- Fixup workflows
+- Hashing + deduplication
+- Sidecar should check both .jpg.xmp and .xmp
+- Sidecar check could be case-insensitive
+
+# ISSUES
+
+- Upload can't use sdk due to multiple issues
