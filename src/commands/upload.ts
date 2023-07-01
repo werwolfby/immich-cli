@@ -27,7 +27,6 @@ export default class Upload extends BaseCommand {
 
     this.uploadLength = uploadTargets.length;
 
-    console.log('Import: ' + options.import);
     for (const target of uploadTargets) {
       if (options.import) {
         await this.importTarget(target);
@@ -96,7 +95,7 @@ export default class Upload extends BaseCommand {
   }
 
   private async importTarget(target: UploadTarget) {
-    await target.read();
+    await target.import();
 
     const importData = {
       assetPath: target.path,
@@ -108,12 +107,7 @@ export default class Upload extends BaseCommand {
       isFavorite: false,
     };
 
-    await this.uploadService.import(importData).catch((error) => {
-      if (error instanceof AxiosError) {
-        console.log(error.response);
-      }
-      exit(1);
-    });
+    await this.uploadService.import(importData);
 
     this.uploadCounter++;
     console.log(this.uploadCounter + '/' + this.uploadLength + ' imported: ' + target.path);

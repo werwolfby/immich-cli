@@ -22,6 +22,14 @@ export class UploadTarget {
 
   async read() {
     this.assetData = await fs.promises.readFile(this.path);
+    await this.process();
+  }
+
+  async import() {
+    await this.process();
+  }
+
+  private async process() {
     const stats = fs.statSync(this.path);
     this.deviceAssetId = `${basename(this.path)}-${stats.size}`.replace(/\s+/g, '');
     const mimeType = mime.lookup(this.path);
@@ -32,14 +40,6 @@ export class UploadTarget {
     this.fileCreatedAt = stats.ctime.toISOString();
     this.fileModifiedAt = stats.mtime.toISOString();
     this.fileExtension = path.extname(this.path);
-    await this.readSidecar();
-  }
-
-  async import() {
-    await this.readSidecar();
-  }
-
-  private async readSidecar() {
     let hasSidecar = true;
 
     // TODO: doesn't xmp replace the file extension? Will need investigation
