@@ -7,6 +7,7 @@ import mockAxios from 'jest-mock-axios';
 import { UploadTarget } from '../cores/models/upload-target';
 import { ImmichApi } from '../api/client';
 import FormData from 'form-data';
+import { ApiConfiguration } from '../cores/api-configuration';
 
 jest.mock('immich-sdk');
 
@@ -23,18 +24,9 @@ describe('UploadService', () => {
   });
 
   beforeEach(() => {
-    const mockConfig: AxiosRequestConfig<any> = {
-      method: 'post',
-      maxRedirects: 0,
-      url: `https://example.com/asset/upload`,
-      headers: {
-        'x-api-key': 'key',
-      },
-      maxContentLength: Number.POSITIVE_INFINITY,
-      maxBodyLength: Number.POSITIVE_INFINITY,
-    };
+    const apiConfiguration = new ApiConfiguration('https://example.com/api', 'key');
 
-    uploadService = new UploadService(mockConfig);
+    uploadService = new UploadService(apiConfiguration);
   });
 
   it('should upload a single file', async () => {
