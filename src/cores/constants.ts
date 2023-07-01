@@ -9,6 +9,6 @@ const gif = ['gif'];
 const tiff = ['tif', 'tiff'];
 const webp = ['webp'];
 const dng = ['dng'];
-const nef = ['nef'];
+const raw = ['nef', 'arw'];
 
-export const ACCEPTED_FILE_EXTENSIONS = [...videos, ...jpeg, ...png, ...hiec, ...gif, ...tiff, ...webp, ...dng, ...nef];
+export const ACCEPTED_FILE_EXTENSIONS = [...videos, ...jpeg, ...png, ...hiec, ...gif, ...tiff, ...webp, ...dng, ...raw];
