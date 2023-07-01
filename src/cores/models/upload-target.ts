@@ -32,6 +32,14 @@ export class UploadTarget {
     this.fileCreatedAt = stats.ctime.toISOString();
     this.fileModifiedAt = stats.mtime.toISOString();
     this.fileExtension = path.extname(this.path);
+    await this.readSidecar();
+  }
+
+  async import() {
+    await this.readSidecar();
+  }
+
+  private async readSidecar() {
     let hasSidecar = true;
 
     // TODO: doesn't xmp replace the file extension? Will need investigation

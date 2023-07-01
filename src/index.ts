@@ -7,14 +7,24 @@ program.name('immich').description('Immich command line interface');
 
 program
   .command('upload')
-  .description('Upload assets to an Immich instance')
+  .description('Upload assets')
   .usage('upload [options] [paths...]')
   .addOption(new Option('-r, --recursive', 'Recursive').env('IMMICH_RECURSIVE').default(false))
   .addOption(new Option('-h, --skip-hash', "Don't hash files before upload").env('IMMICH_SKIP_HASH').default(false))
   .addOption(new Option('-da, --delete', 'Delete local assets after upload').env('IMMICH_DELETE_ASSETS'))
-  .addOption(new Option('-i, --import', 'Import instead of upload').env('IMMICH_IMPORT').default(false))
   .argument('[paths...]', 'One or more paths to assets to be uploaded')
   .action((paths, options) => {
+    new Upload().run(paths, options);
+  });
+
+program
+  .command('import')
+  .description('Import existing assets')
+  .usage('import [options] [paths...]')
+  .addOption(new Option('-r, --recursive', 'Recursive').env('IMMICH_RECURSIVE').default(false))
+  .argument('[paths...]', 'One or more paths to assets to be uploaded')
+  .action((paths, options) => {
+    options.import = true;
     new Upload().run(paths, options);
   });
 

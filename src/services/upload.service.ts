@@ -1,18 +1,35 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import FormData from 'form-data';
 import { ApiConfiguration } from '../cores/api-configuration';
+import { exit } from 'process';
 
 export class UploadService {
   private readonly uploadConfig: AxiosRequestConfig<any>;
   private readonly checkAssetExistenceConfig: AxiosRequestConfig<any>;
+  private readonly importConfig: AxiosRequestConfig<any>;
+
+  private readonly apiConfiguration: ApiConfiguration;
 
   constructor(apiConfiguration: ApiConfiguration) {
+    this.apiConfiguration = apiConfiguration;
     this.uploadConfig = {
       method: 'post',
       maxRedirects: 0,
       url: `${apiConfiguration.instanceUrl}/asset/upload`,
       headers: {
         'x-api-key': apiConfiguration.apiKey,
+      },
+      maxContentLength: Number.POSITIVE_INFINITY,
+      maxBodyLength: Number.POSITIVE_INFINITY,
+    };
+
+    this.importConfig = {
+      method: 'post',
+      maxRedirects: 0,
+      url: `${apiConfiguration.instanceUrl}/asset/import`,
+      headers: {
+        'x-api-key': apiConfiguration.apiKey,
+        'Content-Type': 'application/json',
       },
       maxContentLength: Number.POSITIVE_INFINITY,
       maxBodyLength: Number.POSITIVE_INFINITY,
@@ -41,5 +58,12 @@ export class UploadService {
 
     // TODO: retry on 500 errors?
     return axios(this.uploadConfig);
+  }
+
+  public import(data: any): Promise<any> {
+    this.importConfig.data = data;
+
+    // TODO: retry on 500 errors?
+    return axios(this.importConfig);
   }
 }
