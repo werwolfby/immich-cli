@@ -4,27 +4,29 @@ import { CrawlService, UploadService } from '../services';
 import * as si from 'systeminformation';
 import FormData from 'form-data';
 import { AxiosError } from 'axios';
+import { UploadOptionsDto } from '../cores/dto/upload-options-dto';
 
 export default class Upload extends BaseCommand {
   private crawlService = new CrawlService();
   private uploadService!: UploadService;
 
-  public async run(paths: string[], recursive: boolean = false, skipHash: boolean = false): Promise<void> {
+  public async run(paths: string[], options: UploadOptionsDto): Promise<void> {
     await this.connect();
 
     const uuid = await si.uuid();
     const deviceId: string = uuid.os || 'CLI';
     this.uploadService = new UploadService(this.immichApi.getAxiosConfig);
 
-    const crawledFiles: string[] = await this.crawlService.crawl(paths, recursive);
+    const crawledFiles: string[] = await this.crawlService.crawl(paths, options.recursive);
 
     const uploadTargets = crawledFiles.map((path) => new UploadTarget(path));
     const uploadLength = uploadTargets.length;
     let uploadCounter: number = 0;
+
     for (const target of uploadTargets) {
       await target.read();
       let skipUpload: boolean = false;
-      if (!skipHash) {
+      if (!options.skipHash) {
         const checksum: string = await target.hash();
 
         const checkResponse = await this.uploadService.checkIfAssetAlreadyExists(target.path, checksum);
@@ -61,6 +63,18 @@ export default class Upload extends BaseCommand {
       }
     }
 
-    console.log('Upload successful');
+    if (options.delete) {
+      console.log('Upload successful, deleting uploaded assets');
+      let deletionCounter: number = 0;
+
+      for (const target of uploadTargets) {
+        await target.delete();
+        deletionCounter++;
+        console.log(deletionCounter + '/' + uploadLength + ' deleted: ' + target.path);
+      }
+      console.log('Process complete');
+    } else {
+      console.log('Upload successful');
+    }
   }
 }

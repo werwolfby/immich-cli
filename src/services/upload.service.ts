@@ -3,12 +3,11 @@ import FormData from 'form-data';
 import { exit } from 'process';
 
 export class UploadService {
-  private readonly axiosConfig: any;
   private readonly uploadConfig: any;
   private readonly checkAssetExistenceConfig: any;
 
   constructor(axiosConfig: any) {
-    this.axiosConfig = axiosConfig;
+    // TODO: This isn't very clean
     this.uploadConfig = JSON.parse(JSON.stringify(axiosConfig));
     this.uploadConfig.url = this.uploadConfig.url + '/asset/upload';
     this.uploadConfig.maxContentLength = Number.POSITIVE_INFINITY;

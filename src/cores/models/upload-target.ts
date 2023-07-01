@@ -48,6 +48,10 @@ export class UploadTarget {
     }
   }
 
+  async delete(): Promise<void> {
+    return fs.promises.unlink(this.path);
+  }
+
   public async hash(): Promise<string> {
     const crypto = require('crypto');
 
