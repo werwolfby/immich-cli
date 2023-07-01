@@ -38,7 +38,7 @@ export class UploadTarget {
     const sideCarPath = `${this.path}.xmp`;
     try {
       fs.accessSync(sideCarPath, fs.constants.R_OK);
-    } catch (err) {
+    } catch (error) {
       // No sidecar file
       hasSidecar = false;
     }
@@ -46,5 +46,21 @@ export class UploadTarget {
       this.sidecarPath = `${this.path}.xmp`;
       this.sidecarData = await fs.promises.readFile(this.sidecarPath);
     }
+  }
+
+  public async hash(): Promise<string> {
+    const crypto = require('crypto');
+
+    const hash = crypto.createHash('sha1');
+
+    const sha1 = (filePath: string) =>
+      new Promise<string>((resolve, reject) => {
+        const rs = fs.createReadStream(filePath);
+        rs.on('error', reject);
+        rs.on('data', (chunk) => hash.update(chunk));
+        rs.on('end', () => resolve(hash.digest('hex')));
+      });
+
+    return await sha1(this.path);
   }
 }

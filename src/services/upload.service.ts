@@ -1,18 +1,40 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import FormData from 'form-data';
+import { exit } from 'process';
 
 export class UploadService {
-  private readonly uploadConfig: AxiosRequestConfig;
+  private readonly axiosConfig: any;
+  private readonly uploadConfig: any;
+  private readonly checkAssetExistenceConfig: any;
 
-  constructor(uploadConfig: AxiosRequestConfig) {
-    this.uploadConfig = uploadConfig;
+  constructor(axiosConfig: any) {
+    this.axiosConfig = axiosConfig;
+    this.uploadConfig = JSON.parse(JSON.stringify(axiosConfig));
+    this.uploadConfig.url = this.uploadConfig.url + '/asset/upload';
+    this.uploadConfig.maxContentLength = Number.POSITIVE_INFINITY;
+    this.uploadConfig.maxBodyLength = Number.POSITIVE_INFINITY;
+
+    this.checkAssetExistenceConfig = JSON.parse(JSON.stringify(axiosConfig));
+    this.checkAssetExistenceConfig.url = this.checkAssetExistenceConfig.url + '/asset/bulk-upload-check';
+
+    const headers = this.checkAssetExistenceConfig.headers;
+    if (headers) {
+      headers['Content-Type'] = 'application/json';
+    }
+    this.checkAssetExistenceConfig.headers = headers;
   }
 
-  public upload(data: FormData): Promise<void> {
+  public checkIfAssetAlreadyExists(path: string, checksum: string): Promise<any> {
+    this.checkAssetExistenceConfig.data = JSON.stringify({ assets: [{ id: path, checksum: checksum }] });
+
+    // TODO: retry on 500 errors?
+    return axios(this.checkAssetExistenceConfig);
+  }
+
+  public upload(data: FormData): Promise<any> {
     this.uploadConfig.data = data;
 
     // TODO: retry on 500 errors?
-    //await axios(axiosUploadConfig);
     return axios(this.uploadConfig);
   }
 }

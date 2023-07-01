@@ -9,15 +9,8 @@ program
   .command('upload')
   .description('Upload assets to an Immich instance')
   .usage('upload [options] [paths...]')
-  .addOption(new Option('-k, --key <value>', 'API Key').env('IMMICH_API_KEY'))
-  .addOption(
-    new Option(
-      '-s, --server <value>',
-      'Immich server address (http://<your-ip>:2283/api or https://<your-domain>/api)',
-    ).env('IMMICH_SERVER_ADDRESS'),
-  )
   .addOption(new Option('-r, --recursive', 'Recursive').env('IMMICH_RECURSIVE').default(false))
-  .addOption(new Option('-y, --yes', 'Assume yes on all interactive prompts').env('IMMICH_ASSUME_YES'))
+  .addOption(new Option('-h, --skip-hash', "Don't hash files before upload").env('IMMICH_SKIP_HASH').default(false))
   .addOption(new Option('-da, --delete', 'Delete local assets after upload').env('IMMICH_DELETE_ASSETS'))
   .addOption(
     new Option('-t, --threads <num>', 'Amount of concurrent upload threads (default=5)').env('IMMICH_UPLOAD_THREADS'),
@@ -40,8 +33,7 @@ program
         paths = [envPath];
       }
     }
-
-    new Upload().run(paths, options.recursive);
+    new Upload().run(paths, options.recursive, options.skipHash);
   });
 
 program

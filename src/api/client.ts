@@ -29,7 +29,7 @@ export class ImmichApi {
   public key: string;
 
   private config;
-  private axiosUploadConfig: AxiosRequestConfig;
+  private axiosConfig: AxiosRequestConfig;
 
   constructor(instanceUrl: string, apiKey: string) {
     this.instanceUrl = instanceUrl;
@@ -44,15 +44,13 @@ export class ImmichApi {
       },
     });
 
-    this.axiosUploadConfig = {
+    this.axiosConfig = {
       method: 'post',
       maxRedirects: 0,
-      url: `${instanceUrl}/asset/upload`,
+      url: instanceUrl,
       headers: {
         'x-api-key': apiKey,
       },
-      maxContentLength: Number.POSITIVE_INFINITY,
-      maxBodyLength: Number.POSITIVE_INFINITY,
     };
 
     this.userApi = new UserApi(this.config);
@@ -67,7 +65,7 @@ export class ImmichApi {
     this.shareApi = new ShareApi(this.config);
   }
 
-  public get getAxiosUploadConfig() {
-    return this.axiosUploadConfig;
+  public get getAxiosConfig() {
+    return this.axiosConfig;
   }
 }
