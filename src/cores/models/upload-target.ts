@@ -32,6 +32,8 @@ export class UploadTarget {
   private async process() {
     const stats = fs.statSync(this.path);
     this.deviceAssetId = `${basename(this.path)}-${stats.size}`.replace(/\s+/g, '');
+
+    // TODO: Determine file type from extension only
     const mimeType = mime.lookup(this.path);
     if (!mimeType) {
       throw Error('Cannot determine mime type of asset: ' + this.path);
