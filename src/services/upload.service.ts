@@ -1,26 +1,32 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import FormData from 'form-data';
-import { exit } from 'process';
+import { ApiConfiguration } from '../cores/api-configuration';
 
 export class UploadService {
-  private readonly uploadConfig: any;
-  private readonly checkAssetExistenceConfig: any;
+  private readonly uploadConfig: AxiosRequestConfig<any>;
+  private readonly checkAssetExistenceConfig: AxiosRequestConfig<any>;
 
-  constructor(axiosConfig: any) {
-    // TODO: This isn't very clean
-    this.uploadConfig = JSON.parse(JSON.stringify(axiosConfig));
-    this.uploadConfig.url = this.uploadConfig.url + '/asset/upload';
-    this.uploadConfig.maxContentLength = Number.POSITIVE_INFINITY;
-    this.uploadConfig.maxBodyLength = Number.POSITIVE_INFINITY;
+  constructor(apiConfiguration: ApiConfiguration) {
+    this.uploadConfig = {
+      method: 'post',
+      maxRedirects: 0,
+      url: `${apiConfiguration.instanceUrl}/asset/upload`,
+      headers: {
+        'x-api-key': apiConfiguration.apiKey,
+      },
+      maxContentLength: Number.POSITIVE_INFINITY,
+      maxBodyLength: Number.POSITIVE_INFINITY,
+    };
 
-    this.checkAssetExistenceConfig = JSON.parse(JSON.stringify(axiosConfig));
-    this.checkAssetExistenceConfig.url = this.checkAssetExistenceConfig.url + '/asset/bulk-upload-check';
-
-    const headers = this.checkAssetExistenceConfig.headers;
-    if (headers) {
-      headers['Content-Type'] = 'application/json';
-    }
-    this.checkAssetExistenceConfig.headers = headers;
+    this.checkAssetExistenceConfig = {
+      method: 'post',
+      maxRedirects: 0,
+      url: `${apiConfiguration.instanceUrl}/asset/bulk-upload-check`,
+      headers: {
+        'x-api-key': apiConfiguration.apiKey,
+        'Content-Type': 'application/json',
+      },
+    };
   }
 
   public checkIfAssetAlreadyExists(path: string, checksum: string): Promise<any> {

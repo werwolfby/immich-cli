@@ -1,4 +1,3 @@
-import { AxiosRequestConfig } from 'axios';
 import {
   AlbumApi,
   APIKeyApi,
@@ -12,6 +11,7 @@ import {
   SystemConfigApi,
   UserApi,
 } from 'immich-sdk';
+import { ApiConfiguration } from '../cores/api-configuration';
 
 export class ImmichApi {
   public userApi: UserApi;
@@ -25,16 +25,11 @@ export class ImmichApi {
   public systemConfigApi: SystemConfigApi;
   public shareApi: ShareApi;
 
-  public instanceUrl: string;
-  public key: string;
-
-  private config;
-  private axiosConfig: AxiosRequestConfig;
+  private readonly config;
+  public readonly apiConfiguration: ApiConfiguration;
 
   constructor(instanceUrl: string, apiKey: string) {
-    this.instanceUrl = instanceUrl;
-    this.key = apiKey;
-
+    this.apiConfiguration = new ApiConfiguration(instanceUrl, apiKey);
     this.config = new Configuration({
       basePath: instanceUrl,
       baseOptions: {
@@ -43,15 +38,6 @@ export class ImmichApi {
         },
       },
     });
-
-    this.axiosConfig = {
-      method: 'post',
-      maxRedirects: 0,
-      url: instanceUrl,
-      headers: {
-        'x-api-key': apiKey,
-      },
-    };
 
     this.userApi = new UserApi(this.config);
     this.albumApi = new AlbumApi(this.config);
@@ -63,9 +49,5 @@ export class ImmichApi {
     this.keyApi = new APIKeyApi(this.config);
     this.systemConfigApi = new SystemConfigApi(this.config);
     this.shareApi = new ShareApi(this.config);
-  }
-
-  public get getAxiosConfig() {
-    return this.axiosConfig;
   }
 }

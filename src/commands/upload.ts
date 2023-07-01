@@ -3,7 +3,6 @@ import { UploadTarget } from '../cores';
 import { CrawlService, UploadService } from '../services';
 import * as si from 'systeminformation';
 import FormData from 'form-data';
-import { AxiosError } from 'axios';
 import { UploadOptionsDto } from '../cores/dto/upload-options-dto';
 
 export default class Upload extends BaseCommand {
@@ -15,7 +14,7 @@ export default class Upload extends BaseCommand {
 
     const uuid = await si.uuid();
     const deviceId: string = uuid.os || 'CLI';
-    this.uploadService = new UploadService(this.immichApi.getAxiosConfig);
+    this.uploadService = new UploadService(this.immichApi.apiConfiguration);
 
     const crawledFiles: string[] = await this.crawlService.crawl(paths, options.recursive);
 
