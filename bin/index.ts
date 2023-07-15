@@ -118,8 +118,7 @@ async function upload(
   log(chalk.green(`Successful authentication for user ${user.email}`));
 
   // Get mime types
-  const supportedMimeTypes = await getSupportMimeTypes(endpoint);
-
+  const supportedFiles = await getSupportMimeTypes(endpoint);
   // Index provided directory
   log('Indexing local assets...');
 
@@ -159,8 +158,8 @@ async function upload(
   const uniqueFiles = new Set(files);
 
   for (const filePath of uniqueFiles) {
-    const mimeType = mime.lookup(filePath) as string;
-    if (supportedMimeTypes.includes(mimeType)) {
+    const fileExtension = path.extname(filePath);
+    if (supportedFiles['video'].includes(fileExtension) || supportedFiles['image'].includes(fileExtension)) {
       try {
         const fileStat = fs.statSync(filePath);
         localAssets.push({
@@ -509,7 +508,7 @@ async function getSupportMimeTypes(endpoint: string) {
     const res = await axios.get(`${endpoint}/server-info/media-types`);
 
     if (res.status == 200) {
-      return res.data['mimeTypes'];
+      return res.data;
     }
   } catch (e) {
     log(chalk.red('Error logging in - check api key'));
