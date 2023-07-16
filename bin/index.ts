@@ -158,7 +158,7 @@ async function upload(
   const uniqueFiles = new Set(files);
 
   for (const filePath of uniqueFiles) {
-    const fileExtension = path.extname(filePath).toLocaleLowerCase();
+    const fileExtension = path.extname(filePath).toLowerCase();
     if (supportedFiles['video'].includes(fileExtension) || supportedFiles['image'].includes(fileExtension)) {
       try {
         const fileStat = fs.statSync(filePath);
