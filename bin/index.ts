@@ -22,31 +22,6 @@ const rl = readline.createInterface({
 });
 let errorAssets: any[] = [];
 
-const SUPPORTED_MIME = [
-  // IMAGES
-  'image/heif',
-  'image/heic',
-  'image/jpeg',
-  'image/png',
-  'image/jpg',
-  'image/gif',
-  'image/heic',
-  'image/heif',
-  'image/dng',
-  'image/x-adobe-dng',
-  'image/webp',
-  'image/tiff',
-  'image/nef',
-  'image/x-nikon-nef',
-
-  // VIDEO
-  'video/mp4',
-  'video/webm',
-  'video/quicktime',
-  'video/x-msvideo',
-  'video/3gpp',
-];
-
 program.name('immich').description('Immich command line interface').version(pjson.version);
 
 program
@@ -71,11 +46,7 @@ program
       'IMMICH_CREATE_ALBUMS',
     ),
   )
-  .addOption(
-    new Option('-i, --import', 'Import instead of upload').env(
-      'IMMICH_IMPORT',
-    ).default(false)
-  )
+  .addOption(new Option('-i, --import', 'Import instead of upload').env('IMMICH_IMPORT').default(false))
   .addOption(new Option('-id, --device-uuid <value>', 'Set a device UUID').env('IMMICH_DEVICE_UUID'))
   .addOption(
     new Option(
@@ -146,6 +117,8 @@ async function upload(
   const user = await validateConnection(endpoint, key);
   log(chalk.green(`Successful authentication for user ${user.email}`));
 
+  // Get mime types
+  const supportedFiles = await getSupportMimeTypes(endpoint);
   // Index provided directory
   log('Indexing local assets...');
 
@@ -185,8 +158,8 @@ async function upload(
   const uniqueFiles = new Set(files);
 
   for (const filePath of uniqueFiles) {
-    const mimeType = mime.lookup(filePath) as string;
-    if (SUPPORTED_MIME.includes(mimeType)) {
+    const fileExtension = path.extname(filePath).toLowerCase();
+    if (supportedFiles['video'].includes(fileExtension) || supportedFiles['image'].includes(fileExtension)) {
       try {
         const fileStat = fs.statSync(filePath);
         localAssets.push({
@@ -364,7 +337,7 @@ async function upload(
       // log(chalk.yellow(`Failed to upload ${errorAssets.length} files `), errorAssets);
 
       for (const error of errorAssets) {
-        console.log("Error asset: ", error)
+        console.log('Error asset: ', error);
       }
 
       if (errorAssets.length > 0) {
@@ -394,15 +367,15 @@ async function startUpload(endpoint: string, key: string, asset: any, deviceId: 
       fileExtension: path.extname(asset.filePath),
       duration: '0:00:00.000000',
       isReadOnly: doImport ? String(true) : String(false),
-    }
+    };
 
-    const formData = new FormData()
+    const formData = new FormData();
     if (!doImport) {
       for (const prop in data) {
-        formData.append(prop, data[prop])
+        formData.append(prop, data[prop]);
       }
 
-      formData.append("assetData", fs.createReadStream(asset.filePath));
+      formData.append('assetData', fs.createReadStream(asset.filePath));
     } else {
       data.assetPath = asset.filePath;
     }
@@ -410,9 +383,11 @@ async function startUpload(endpoint: string, key: string, asset: any, deviceId: 
     try {
       await fs.promises.access(`${asset.filePath}.xmp`, fs.constants.W_OK);
       if (doImport) {
-        data.sidecarPath = path.resolve(`${asset.filePath}.xmp`)
+        data.sidecarPath = path.resolve(`${asset.filePath}.xmp`);
       } else {
-        formData.append("sidecarData", fs.createReadStream(path.resolve(`${asset.filePath}.xmp`)), { contentType: 'application/xml' });
+        formData.append('sidecarData', fs.createReadStream(path.resolve(`${asset.filePath}.xmp`)), {
+          contentType: 'application/xml',
+        });
       }
     } catch (e) {}
 
@@ -526,4 +501,17 @@ function getAssetType(filePath: string) {
   const mimeType = mime.lookup(filePath) as string;
 
   return mimeType.split('/')[0].toUpperCase();
+}
+
+async function getSupportMimeTypes(endpoint: string) {
+  try {
+    const res = await axios.get(`${endpoint}/server-info/media-types`);
+
+    if (res.status == 200) {
+      return res.data;
+    }
+  } catch (e) {
+    log(chalk.red('Error logging in - check api key'));
+    process.exit(1);
+  }
 }
