@@ -354,13 +354,11 @@ async function upload(
 
 async function startUpload(endpoint: string, key: string, asset: any, deviceId: string, doImport: boolean) {
   try {
-    const assetType = getAssetType(asset.filePath);
     const fileStat = await stat(asset.filePath);
 
     const data: any = {
       deviceAssetId: asset.id,
       deviceId,
-      assetType,
       fileCreatedAt: fileStat.mtime.toISOString(),
       fileModifiedAt: fileStat.mtime.toISOString(),
       isFavorite: String(false),
@@ -495,12 +493,6 @@ async function validateConnection(endpoint: string, key: string) {
     log(chalk.red('Error logging in - check api key'));
     process.exit(1);
   }
-}
-
-function getAssetType(filePath: string) {
-  const mimeType = mime.lookup(filePath) as string;
-
-  return mimeType.split('/')[0].toUpperCase();
 }
 
 async function getSupportMimeTypes(endpoint: string) {
