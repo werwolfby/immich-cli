@@ -463,6 +463,7 @@ async function getAssetInfoFromServer(endpoint: string, key: string, deviceId: s
     return res.data;
   } catch (e) {
     log(chalk.red("Error getting device's uploaded assets"));
+    console.log(e)
     process.exit(1);
   }
 }
