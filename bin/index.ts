@@ -445,7 +445,7 @@ async function addAssetsToAlbum(endpoint: string, key: string, albumId: string, 
   try {
     await axios.put(
       `${endpoint}/album/${albumId}/assets`,
-      { assetIds: [...new Set(assetIds)] },
+      { ids: [...new Set(assetIds)] },
       {
         headers: { 'x-api-key': key },
       },
