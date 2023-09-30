@@ -97,7 +97,7 @@ async function upload(
     recursive,
     yes: assumeYes,
     delete: deleteAssets,
-    uploadThreads,
+    threads: uploadThreads,
     album: createAlbums,
     deviceUuid: deviceUuid,
     import: doImport,
