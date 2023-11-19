@@ -230,7 +230,9 @@ async function upload(
         },
         cliProgress.Presets.shades_classic,
       );
-      progressBar.start(localAssets.length, 0, { filepath: '' });
+      // For createAlbum we are going to process all files to add already uploaded files to the album
+      // but for regular upload we need to show progress for newAssets only
+      progressBar.start((createAlbums ? localAssets : newAssets).length, 0, { filepath: '' });
 
       const assetDirectoryMap: Map<string, string[]> = new Map();
 
