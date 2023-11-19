@@ -39,7 +39,9 @@ program
   .addOption(new Option('-y, --yes', 'Assume yes on all interactive prompts').env('IMMICH_ASSUME_YES'))
   .addOption(new Option('-da, --delete', 'Delete local assets after upload').env('IMMICH_DELETE_ASSETS'))
   .addOption(
-    new Option('-t, --threads <num>', 'Amount of concurrent upload threads (default=5)').env('IMMICH_UPLOAD_THREADS'),
+    new Option('-t, --threads <num>', 'Amount of concurrent upload threads (default=5)').env('IMMICH_UPLOAD_THREADS')
+      .default("5")
+      .argParser(v => parseInt(v)),
   )
   .addOption(
     new Option('-al, --album [album]', 'Create albums for assets based on the parent folder or a given name').env(
@@ -234,7 +236,7 @@ async function upload(
 
       const uploadQueue = [];
 
-      const limit = pLimit(uploadThreads ?? 5);
+      const limit = pLimit(uploadThreads);
 
       for (const asset of localAssets) {
         const album = asset.filePath.split(path.sep).slice(-2)[0];
