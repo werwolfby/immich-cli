@@ -1,3 +1,8 @@
+> [!warning]
+> Archived - please use the [new CLI](https://immich.app/docs/features/command-line-interface) instead
+
+- - - -
+
 # IMMICH CLI
 
 CLI utilities to help with some operations with the Immich app
